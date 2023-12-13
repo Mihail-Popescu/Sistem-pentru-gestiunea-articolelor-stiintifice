@@ -1,0 +1,64 @@
+.login-wrapper {
+    background-color: #f0f8ff;
+    color: #333;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+    padding-bottom: 250px;
+}
+
+.login-wrapper h1 {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-wrapper form {
+    width: 300px;
+    margin: 20px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.login-wrapper form button[type="submit"] {
+    background-color: #4682b4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-wrapper form button[type="submit"]:hover {
+    background-color: #36648b;
+}
+
+.login-wrapper div {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-wrapper div a {
+    margin: 5px;
+}
+
+.login-wrapper div a button {
+    background-color: #4682b4;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-wrapper div a button:hover {
+    background-color: #36648b;
+}

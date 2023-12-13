@@ -20,10 +20,16 @@ from django.conf.urls.static import static
 
 from proiect.core import views as core_views
 
+from django.contrib.auth import views as auth_views
+
 urlpatterns = [
     path("", core_views.index),
     path("admin/", admin.site.urls),
     path("__reload__/", include("django_browser_reload.urls")),
+    path('login/', core_views.login_view, name='login'),
+    path('signup/', core_views.signup_user, name='signup'),
+    path('signup_reviewer/', core_views.signup_reviewer, name='signup_reviewer'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load django_browser_reload %}
+{% load static %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'login.css' %}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <h1>Login</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Login</button>
+        </form>
+    
+        <div>
+            <a href="/signup"><button>Signup</button></a>
+            <a href="/signup_reviewer"><button>Become a Reviewer</button></a>
+            <a href="/admin/"><button>Admin</button></a>
+            <a href="javascript:history.back()"><button>Back</button></a>
+        </div>
+    </body>
+    </div>
+
+</html>
+
+{% endblock %}

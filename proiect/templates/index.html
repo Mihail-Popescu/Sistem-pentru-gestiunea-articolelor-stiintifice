@@ -1,15 +1,10 @@
+{% extends 'base.html' %}
 {% load django_browser_reload %}
 {% load static %}
-
-<!doctype html>
-<html lang="en">
-
-<head>
+{% block content %}
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="{% static 'main.css' %}">
-</head>
-
-<body>
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    
     <div class="App">
         <header class="App-header">
             <img src="{% static 'Octocat.png' %}" class="App-logo" alt="logo" />
@@ -21,6 +16,4 @@
             </p>
         </header>
     </div>
-</body>
-
-</html>
+{% endblock %}

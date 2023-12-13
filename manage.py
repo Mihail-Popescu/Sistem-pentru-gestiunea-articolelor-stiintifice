@@ -15,7 +15,7 @@ except ImportError as exc:
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hello_world.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "proiect.settings")
     execute_from_command_line(sys.argv)
 
 
