@@ -8,19 +8,29 @@
     <link rel="stylesheet" href="{% static 'base.css' %}">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a>Proiect</a></li>
-                <li><a href="/">Home</a></li>
+    <header class="header">
+        <div class="container">
+            <div class="header-left">
+                <h1 class="header-content" href="/">Proiect</h1>
+            </div>
+            <div class="header-right">
                 {% if user.is_authenticated %}
-                    <li><a>{{ user.username }}</a></li>
-                    <li><a href="#" id="logoutBtn">Logout</a></li>
+                {% if user.is_reviewer %}
+                    <a href="{% url 'reviewer_dash' %}" class="login-button">Reviewer Dashboard</a>
+                {% elif user.is_superuser %}
+                    <a href="{% url 'admin_dash' %}" class="login-button">Admin Dashboard</a>
                 {% else %}
-                    <li><a href="/login">Login</a></li>
+                    <a href="{% url 'user_dash' %}" class="login-button">User Dashboard</a>
                 {% endif %}
-            </ul>
-        </nav>
+            {% endif %}
+                {% if user.is_authenticated %}
+                <span>Welcome, {{ user.username }}</span>
+                <a href="#" id="logoutBtn" class="login-button">Logout</a>
+                {% else %}
+                <a href="/login" class="login-button">Login</a>
+                {% endif %}
+            </div>
+        </div>
     </header>
 
     <main>
@@ -28,8 +38,10 @@
         {% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2023 Site. All rights reserved.</p>
+    <footer class="footer">
+        <div class="container">
+            <p>Copyright &copy; Proiect</p>
+        </div>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

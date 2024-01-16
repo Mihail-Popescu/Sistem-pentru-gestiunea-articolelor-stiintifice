@@ -30,6 +30,14 @@ urlpatterns = [
     path('signup/', core_views.signup_user, name='signup'),
     path('signup_reviewer/', core_views.signup_reviewer, name='signup_reviewer'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('user_dash/', core_views.user_dash, name='user_dash'),
+    path('reviewer_dash/', core_views.reviewer_dash, name='reviewer_dash'),
+    path('admin_dash/', core_views.admin_dash, name='admin_dash'),
+    path('user/remove_document/<int:document_id>/', core_views.remove_document, name='remove_document'),
+    path('user/send_to_review/<int:document_id>/', core_views.send_to_review, name='send_to_review'),
+    path('user/approve_signup_request/<int:request_id>/', core_views.approve_signup_request, name='approve_signup_request'),
+    path('user/deny_signup_request/<int:request_id>/', core_views.deny_signup_request, name='deny_signup_request'),
+    path('signup_reviewer_confirmation/', core_views.signup_reviewer_confirmation, name='signup_reviewer_confirmation'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

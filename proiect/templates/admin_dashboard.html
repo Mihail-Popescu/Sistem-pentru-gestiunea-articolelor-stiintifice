@@ -1,0 +1,22 @@
+<!-- admin_dashboard.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Admin Dashboard</h2>
+  
+  <ul>
+    {% for request in signup_requests %}
+      <li>
+        {{ request.username }} - {{ request.email }} - {{ request.current_workplace }}
+        <form method="post" action="{% url 'approve_signup_request' request.id %}">
+          {% csrf_token %}
+          <button type="submit">Approve</button>
+        </form>
+        <form method="post" action="{% url 'deny_signup_request' request.id %}">
+          {% csrf_token %}
+          <button type="submit">Deny</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}
