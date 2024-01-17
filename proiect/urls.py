@@ -38,6 +38,7 @@ urlpatterns = [
     path('user/approve_signup_request/<int:request_id>/', core_views.approve_signup_request, name='approve_signup_request'),
     path('user/deny_signup_request/<int:request_id>/', core_views.deny_signup_request, name='deny_signup_request'),
     path('signup_reviewer_confirmation/', core_views.signup_reviewer_confirmation, name='signup_reviewer_confirmation'),
+    path('perform_simple_test/<int:document_id>/', core_views.perform_simple_test, name='perform_simple_test'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

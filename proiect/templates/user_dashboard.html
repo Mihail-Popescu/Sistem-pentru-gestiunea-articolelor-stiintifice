@@ -25,6 +25,10 @@
                     <input type="hidden" name="topic" value="{{ document.topic }}">
                     <button type="submit">Send to Review</button>
                 </form>
+                <form method="post" action="{% url 'perform_simple_test' document.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Simple Test</button>
+                </form>
             </li>
         {% endfor %}
     </ul>

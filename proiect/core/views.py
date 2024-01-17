@@ -6,12 +6,51 @@ from proiect.forms import ReviewerSignupForm,DocumentUploadForm
 from proiect.models import UploadedDocument, ReviewerRequest
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
+from sklearn.metrics.pairwise import cosine_similarity
+import spacy
+import numpy as np
 
 def index(request):
     context = {
         "title": "Django example",
     }
     return render(request, "index.html", context)
+
+nlp = spacy.load("en_core_web_md")
+
+#ai-testing
+@login_required
+def perform_simple_test(request, document_id):
+
+    user_document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
+    
+    reference_documents = UploadedDocument.objects.exclude(user=request.user).exclude(id=document_id)
+
+    document_content_bytes = user_document.document.read()
+    document_content = document_content_bytes.decode('utf-8') if isinstance(document_content_bytes, bytes) else document_content_bytes
+
+    query_embedding = nlp(document_content).vector.reshape(1, -1)
+
+    reference_embeddings = [nlp(doc.document.read().decode('utf-8')).vector for doc in reference_documents]
+    reference_embeddings = np.array(reference_embeddings).reshape(len(reference_embeddings), -1)
+
+    similarity_threshold = 0.98
+
+    similarity_values = cosine_similarity(query_embedding, reference_embeddings)[0]
+    max_similarity = max(similarity_values)
+
+    print("Query Vector:", query_embedding)
+    print("Reference Vectors:", reference_embeddings)
+    print("Cosine Similarity Values:", similarity_values)
+
+    if max_similarity < similarity_threshold:
+        test_result = "Test passed"
+    else:
+        test_result = "Test failed"
+
+    return render(request, 'simple_test_result.html', {'user_document': user_document, 'test_result': test_result})
+
+
 
 #user
 @login_required
@@ -41,9 +80,19 @@ def send_to_review(request, document_id):
     document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
 
     if request.method == 'POST':
-
         workplace = request.POST.get('workplace')
         topic = request.POST.get('topic')
+
+        reviewers = get_user_model().objects.filter(is_reviewer=True).exclude(current_workplace=workplace)
+
+        for reviewer in reviewers:
+            UploadedDocument.objects.create(
+                user=reviewer,
+                document=document.document,
+                workplace=workplace,
+                topic=topic
+            )
+
         return redirect('user_dash')
 
     return render(request, 'user_dashboard.html', {'document': document, 'form': DocumentUploadForm()})
@@ -51,8 +100,11 @@ def send_to_review(request, document_id):
 #reviewer
 @login_required
 def reviewer_dash(request):
+    reviewer = request.user
 
-    return render(request, "reviewer_dashboard.html")
+    documents_to_review = UploadedDocument.objects.filter(user=reviewer)
+
+    return render(request, "reviewer_dashboard.html", {'documents_to_review': documents_to_review})
 
 #admin
 @login_required
@@ -64,16 +116,14 @@ def admin_dash(request):
 def approve_signup_request(request, request_id):
     signup_request = get_object_or_404(ReviewerRequest, id=request_id)
     
-    # Create a new user with the provided information
     user = get_user_model().objects.create_user(
         username=signup_request.username,
         email=signup_request.email,
-        password=signup_request.password,  # Use the hashed password
+        password=signup_request.password,
         is_active=True,
         is_reviewer=True
     )
 
-    # After processing, you can delete the reviewer request
     signup_request.delete()
 
     return redirect('admin_dash')
@@ -116,7 +166,7 @@ def signup_reviewer(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             username = form.cleaned_data['username']
-            password = form.cleaned_data['password1']  # Change here
+            password = form.cleaned_data['password1']
 
 
             ReviewerRequest.objects.create(
