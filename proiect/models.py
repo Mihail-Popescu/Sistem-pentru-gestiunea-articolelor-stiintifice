@@ -2,8 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from proiect.settings import AUTH_USER_MODEL
 
-class CustomUser(AbstractUser):
-    is_reviewer = models.BooleanField(default=False)
+class CustomUser(AbstractUser): # user normal si revieweri, ii diferentiem prin \/
+    is_reviewer = models.BooleanField(default=False) #
     current_workplace = models.CharField(max_length=255, blank=True, null=True)
     references = models.TextField(blank=True, null=True)
 

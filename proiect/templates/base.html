@@ -3,32 +3,39 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Title</title>
+    <link rel="icon" href="{% static 'images/2232688.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'base.css' %}">
 </head>
+
 <body>
     <header class="header">
         <div class="container">
             <div class="header-left">
-                <h1 class="header-content" href="/">Proiect</h1>
+                <a href="/" style="text-decoration: none; color: inherit;"> <img src="{% static 'images\2232688.png' %}"
+                        alt="Logo" style="height:50px;"> </a>
+                <a href="/" style="text-decoration: none; color: inherit;">
+                    <h1 class="header-content" href="/">ReviewHub</h1>
+                </a>
             </div>
             <div class="header-right">
                 {% if user.is_authenticated %}
                 {% if user.is_reviewer %}
-                    <a href="{% url 'reviewer_dash' %}" class="login-button">Reviewer Dashboard</a>
+                <a href="{% url 'reviewer_dash' %}" class="login-button">Reviewer Dashboard</a>
                 {% elif user.is_superuser %}
-                    <a href="{% url 'admin_dash' %}" class="login-button">Admin Dashboard</a>
+                <a href="{% url 'admin_dash' %}" class="login-button">Admin Dashboard</a>
                 {% else %}
-                    <a href="{% url 'user_dash' %}" class="login-button">User Dashboard</a>
+                <a href="{% url 'user_dash' %}" class="login-button">User Dashboard</a>
                 {% endif %}
-            {% endif %}
+                {% endif %}
                 {% if user.is_authenticated %}
                 <span>Welcome, {{ user.username }}</span>
                 <a href="#" id="logoutBtn" class="login-button">Logout</a>
                 {% else %}
                 <a href="/login" class="login-button">Login</a>
                 {% endif %}
+                <a href="/help" class="login-button">Help</a>
             </div>
         </div>
     </header>
@@ -39,32 +46,40 @@
     </main>
 
     <footer class="footer">
-        <div class="container">
-            <p>Copyright &copy; Proiect</p>
+        <div class="footer-container">
+            <p>
+                Copyright &copy;
+                <a href="/" style="text-decoration: none; color: inherit;">ReviewHub</a> -
+                <a href="/help/#about-us" style="text-decoration: none; color: inherit;">About Us</a> -
+                <a href="/help/#frequent-questions" style="text-decoration: none; color: inherit;">Frequent
+                    Questions</a> -
+                <a href="/help/#contact-form-section" style="text-decoration: none; color: inherit;">Contact Us</a>
+            </p>
         </div>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#logoutBtn').on('click', function(e) {
-        e.preventDefault();
-        $.ajax({
-            type: 'POST',
-            url: '/logout/',
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function(response) {
-                console.log('Logged out successfully');
-                window.location.href = '/';
-            },
-            error: function(error) {
-                console.log('Error logging out:', error);
-            }
+    <script>
+        $(document).ready(function () {
+            $('#logoutBtn').on('click', function (e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/logout/',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        console.log('Logged out successfully');
+                        window.location.href = '/';
+                    },
+                    error: function (error) {
+                        console.log('Error logging out:', error);
+                    }
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 </body>
+
 </html>

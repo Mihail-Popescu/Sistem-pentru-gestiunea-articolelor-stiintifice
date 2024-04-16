@@ -2,20 +2,25 @@
 {% load django_browser_reload %}
 {% load static %}
 {% block content %}
-    <div class="signup-user-wrapper">
-        <h1>Signup as Reviewer</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.username.label_tag }} {{ form.username }}
-            {{ form.email.label_tag }} {{ form.email }}
-            {{ form.password1.label_tag }} {{ form.password1 }}
-            {{ form.password2.label_tag }} {{ form.password2 }}
-            {{ form.current_workplace.label_tag }} {{ form.current_workplace }}
-            {{ form.references.label_tag }} {{ form.references }}
-            <button type="submit">Sign Up</button>
-        </form>
-        <div>
-            <a href="javascript:history.back()"><button>Back</button></a>
-        </div>
-    </div>
+
+<head>
+    <title>Apply</title>
+    <link rel="stylesheet" href="{% static 'signup_reviewer.css' %}">
+</head>
+
+<div class="signup-user-wrapper">
+    <h1>Apply to become a reviewer</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.username.label_tag }} {{ form.username }}
+        {{ form.email.label_tag }} {{ form.email }}
+        {{ form.password1.label_tag }} {{ form.password1 }}
+        {{ form.password2.label_tag }} {{ form.password2 }}
+        {{ form.current_workplace.label_tag }} {{ form.current_workplace }}
+        {{ form.references.label_tag }} {{ form.references }}
+        <a href="javascript:history.back()"><button>Back</button></a>
+        <button type="submit">Sign Up</button>
+
+    </form>
+</div>
 {% endblock %}

@@ -2,12 +2,105 @@
 {% load django_browser_reload %}
 {% load static %}
 {% block content %}
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="{% static 'base.css' %}">
-    
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ReviewHub</title>
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
+</head>
+
+<body>
     <div class="App">
-            <p>
-                Index
-            </p>
+        <div class="slider">
+            <div class="slides">
+                <div class="slide"><video src="{% static 'videos/reclama-animoto.mp4' %}" alt="Slide 1" autoplay muted
+                        loop></video></div>
+                <div class="slide"><video src="{% static 'videos/book.mp4' %}" alt="Slide 2" autoplay muted
+                        loop></video></div>
+                <div class="slide"><img src="{% static 'images/image2.jpg' %}" alt="Slide 3"></div>
+
+                <div class="slide"><img src="{% static 'images/image4.jpg' %}" alt="Slide 4" class="blur"></div>
+                <div class="slide"><img src="{% static 'images/image5.jpg' %}" alt="Slide 5" class="blur"></div>
+            </div>
+            <div class="dots-container">
+                <span class="dot" onclick="currentSlide(1)"></span>
+                <span class="dot" onclick="currentSlide(2)"></span>
+                <span class="dot" onclick="currentSlide(3)"></span>
+                <span class="dot" onclick="currentSlide(4)"></span>
+                <span class="dot" onclick="currentSlide(5)"></span>
+            </div>
+        </div>
+
+
+        <p class="main-text">Connecting researchers with qualified reviewers.</p>
+
+        <div class="geolocation-section">
+            There are currently {{ country_reviewer_count }} reviewers <br> in <span
+                class="flag-icon flag-icon-{{ country|lower }}"></span>{{ country }} available for you.
+        </div>
+
     </div>
+</body>
+
+<script>
+    let slideIndex = 1;
+    let slideInterval = setInterval(startSlideInterval, 20000);
+
+    showSlides(slideIndex);
+
+    function currentSlide(n) {
+        slideIndex = n;
+        showSlides(slideIndex);
+        resetInterval();
+    }
+
+    function resetInterval() {
+        clearInterval(slideInterval);
+        slideInterval = setInterval(startSlideInterval, 20000);
+    }
+
+    function startSlideInterval() {
+        slideIndex++;
+        if (slideIndex > document.getElementsByClassName("slide").length) {
+            slideIndex = 1;
+        }
+        showSlides(slideIndex);
+    }
+
+    function showSlides(n) {
+        let i;
+        let slides = document.getElementsByClassName("slide");
+        let dots = document.getElementsByClassName("dot");
+
+        if (n > slides.length) { slideIndex = 1; }
+        if (n < 1) { slideIndex = slides.length; }
+
+        for (i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+
+        for (i = 0; i < dots.length; i++) {
+            dots[i].className = dots[i].className.replace(" active", "");
+        }
+
+        slides[slideIndex - 1].style.display = "block";
+        dots[slideIndex - 1].className += " active";
+
+        let videos = document.querySelectorAll('.slide video');
+        videos.forEach(video => {
+            video.pause();
+            video.currentTime = 0;
+        });
+
+        if (slides[slideIndex - 1].querySelector('video')) {
+            let video = slides[slideIndex - 1].querySelector('video');
+            video.play();
+        }
+    }
+</script>
+
+</html>
 {% endblock %}

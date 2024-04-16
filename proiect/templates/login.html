@@ -5,10 +5,12 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Login</title>
-    <link rel="stylesheet" href="{% static 'login.css' %}">
+    <link rel="stylesheet" href="{% static 'newlogin.css' %}">
 </head>
+
 <body>
     <div class="login-wrapper">
         <h1>Login</h1>
@@ -17,15 +19,15 @@
             {{ form.as_p }}
             <button type="submit">Login</button>
         </form>
-    
+
         <div>
             <a href="/signup"><button>Signup</button></a>
             <a href="/signup_reviewer"><button>Become a Reviewer</button></a>
             <a href="/admin/"><button>Admin</button></a>
             <a href="javascript:history.back()"><button>Back</button></a>
         </div>
-    </body>
     </div>
+</body>
 
 </html>
 

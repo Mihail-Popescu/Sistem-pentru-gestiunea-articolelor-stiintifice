@@ -26,6 +26,7 @@ urlpatterns = [
     path("", core_views.index),
     path("admin/", admin.site.urls),
     path("__reload__/", include("django_browser_reload.urls")),
+    path('help/', core_views.help_page, name='help'),
     path('login/', core_views.login_view, name='login'),
     path('signup/', core_views.signup_user, name='signup'),
     path('signup_reviewer/', core_views.signup_reviewer, name='signup_reviewer'),
@@ -39,6 +40,7 @@ urlpatterns = [
     path('user/deny_signup_request/<int:request_id>/', core_views.deny_signup_request, name='deny_signup_request'),
     path('signup_reviewer_confirmation/', core_views.signup_reviewer_confirmation, name='signup_reviewer_confirmation'),
     path('perform_simple_test/<int:document_id>/', core_views.perform_simple_test, name='perform_simple_test'),
+    path('contact_form/', core_views.contact_form, name='contact_form'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,88 @@
+.App {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.geolocation-section {
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    padding: 20px;
+    border: 2px solid #4682b4;
+    background-color: #ffffff;
+    z-index: 1;
+}
+
+.slider {
+    overflow: hidden;
+    width: 1000px;
+    position: relative;
+}
+
+.slides {
+    display: flex;
+    width: 1000px;
+    height: 500px;
+    transition: transform 0.5s;
+}
+
+.slide {
+    width: 1000px;
+    height: 500px;
+    flex-shrink: 0;
+    display: none;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+.slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+.dots-container {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    width: 100%;
+    z-index: 2;
+}
+
+.dot {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin: 0 8px;
+    background-color: #bbb5de;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.active {
+    background-color: #0077cc;
+}
+
+
+.main-text {
+    font-size: 1.2em;
+}
+
+
+.slide img.blur {
+    filter: blur(5px);
+    transition: filter 0.3s ease-in-out;
+}

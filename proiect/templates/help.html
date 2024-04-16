@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load django_browser_reload %}
+{% load static %}
+{% block content %}
+
+<head>
+    <title>Help</title>
+    <link rel="stylesheet" href="{% static 'help.css' %}">
+</head>
+
+<div id="about-us">
+    <h2>About Us</h2>
+    <p>Welcome to ReviewHub! We are a platform dedicated to helping researchers and authors connect with professional
+        reviewers. Our mission is to facilitate the review process, ensuring quality and efficiency for both parties
+        involved.</p>
+    <p>Whether you're an author looking for expert feedback or a reviewer interested in contributing your expertise,
+        ReviewHub is the place for you.</p>
+</div>
+
+<div id="frequent-questions">
+    <h2>Frequent Questions</h2>
+    <h3>What is ReviewHub?</h3>
+    <p>ReviewHub is an online platform designed to streamline the review process for scientific papers. We connect
+        authors with professional reviewers to ensure high-quality, unbiased feedback.</p>
+
+    <h3>How does it work?</h3>
+    <p>Authors can submit their papers, choose reviewers based on their expertise, and receive detailed feedback.
+        Reviewers can browse available papers, select those of interest, and provide their valuable insights.</p>
+
+    <h3>Is it free to use?</h3>
+    <p>Yes, ReviewHub is completely free for both authors and reviewers. Our goal is to make the review process more
+        accessible and efficient.</p>
+
+    <h3>How do I become a reviewer?</h3>
+    <p>Simply sign up as a reviewer on our platform and complete your profile. Once approved, you can start browsing and
+        reviewing papers.</p>
+</div>
+
+<div id="contact-form-section">
+    <h2>Contact Form</h2>
+    <p>If you need help, please contact us with this form.</p>
+    <form id="contact-form">
+        <input type="text" name="title" placeholder="Title">
+        <input type="email" name="email" placeholder="Email">
+        <textarea name="message" placeholder="Message"></textarea>
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+<audio id="successAudio" src="{% static 'sounds/success.mp3' %}" preload="auto"></audio>
+
+<script>
+    document.getElementById('contact-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        fetch('/contact_form/', {
+            method: 'POST',
+            body: new FormData(this),
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Sunet
+                    const audio = new Audio('{% static "sounds/success.mp3" %}');
+                    audio.play();
+
+                    setTimeout(function () {
+                        alert('Message sent successfully!');
+                    }, 300);
+                }
+            });
+    });
+</script>
+
+{% endblock %}

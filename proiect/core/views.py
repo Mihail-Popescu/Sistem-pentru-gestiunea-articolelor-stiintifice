@@ -4,15 +4,34 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from proiect.forms import ReviewerSignupForm,DocumentUploadForm
 from proiect.models import UploadedDocument, ReviewerRequest
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
 from sklearn.metrics.pairwise import cosine_similarity
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+
 import spacy
 import numpy as np
+import requests
 
 def index(request):
+
+    country = get_country_from_ip(request)
+    
+    if country:
+        country_reviewer_count = get_user_model().objects.filter(is_reviewer=True # , country=country
+                                                                 ).count()
+    else:
+        country = "Your Location"
+        country_reviewer_count = 0
+    
+    reviewer_count = get_user_model().objects.filter(is_reviewer=True).count()
+
     context = {
-        "title": "Django example",
+        "title": "Home",
+        'country': country,
+        'country_reviewer_count': country_reviewer_count,
+        'reviewer_count': reviewer_count,
     }
     return render(request, "index.html", context)
 
@@ -191,3 +210,40 @@ def your_view(request):
     user = request.user
 
     return render(request, 'base.html', {'user': user})
+
+
+#help
+
+def help_page(request):
+    return render(request, 'help.html')
+
+def contact_form(request):
+    if request.method == 'POST':
+        name = request.POST.get('title')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+
+        send_mail(
+            'Contact Form Submission',
+            f'Title: {name}\nEmail: {email}\nMessage: {message}',
+            email,
+            ['mihaixz4@gmail.com'],
+            fail_silently=False,
+        )
+
+        return JsonResponse({'status': 'success'})
+    
+#ip geo
+
+
+def get_country_from_ip(request):
+    
+    try:
+        response = requests.get('https://ipinfo.io/json')
+        data = response.json()
+        country = data['country']
+        return country
+    except Exception as e:
+        return None
+    
+

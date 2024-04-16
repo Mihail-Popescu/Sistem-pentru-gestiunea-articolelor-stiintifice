@@ -1,0 +1,52 @@
+#about-us, #frequent-questions, #contact-form-section {
+    margin: 50px auto;
+    max-width: 800px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#about-us h2, #frequent-questions h2, #contact-form-section h2 {
+    text-align: center;
+    color: #0077cc;
+}
+
+#about-us p, #frequent-questions p, #contact-form-section p {
+    text-align: justify;
+}
+
+#contact-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#contact-form input[type="text"],
+#contact-form input[type="email"],
+#contact-form textarea,
+#contact-form button {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#contact-form input[type="text"],
+#contact-form input[type="email"],
+#contact-form textarea {
+    width: 100%;
+    max-width: 400px;
+}
+
+#contact-form button {
+    background-color: #0077cc;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#contact-form button:hover {
+    background-color: #005fa3;
+}

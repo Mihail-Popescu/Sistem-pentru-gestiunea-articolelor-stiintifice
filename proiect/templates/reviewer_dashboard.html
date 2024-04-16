@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h2>Reviewer Dashboard</h2>
-  
-  <ul>
-    {% for document in documents_to_review %}
-      <li>
-        <a href="{{ document.document.url }}" download="{{ document.document.name }}">
-          {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
-        </a>
-        <form method="post" action="{% url 'remove_document' document.id %}">
-          {% csrf_token %}
-          <button type="submit">Remove</button>
-        </form>
-      </li>
-    {% endfor %}
-  </ul>
+<h2>Reviewer Dashboard</h2>
+
+<ul>
+  {% for document in documents_to_review %}
+  <li>
+    <a href="{{ document.document.url }}" download="{{ document.document.name }}">
+      {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
+    </a>
+    <form method="post" action="{% url 'remove_document' document.id %}">
+      {% csrf_token %}
+      <button type="submit">Remove</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
 {% endblock %}

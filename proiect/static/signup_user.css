@@ -2,21 +2,20 @@
     background-color: #f0f8ff;
     color: #333;
     font-family: Arial, sans-serif;
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-bottom: 250px;
+    padding-bottom: 50px;
 }
 
 .signup-user-wrapper h1 {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 100px;
 }
 
 .signup-user-wrapper form {
-    width: 300px;
+    width: 350px;
     margin: 20px;
     padding: 20px;
     background-color: #ffffff;
@@ -34,6 +33,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-left: 20px;
 }
 
 .signup-user-wrapper form button[type="submit"]:hover {
@@ -49,16 +49,17 @@
     margin: 5px;
 }
 
-.signup-user-wrapper div a button {
+div a button {
     background-color: #4682b4;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-right: 160px;
 }
 
-.signup-user-wrapper div a button:hover {
+div a button:hover {
     background-color: #36648b;
 }
