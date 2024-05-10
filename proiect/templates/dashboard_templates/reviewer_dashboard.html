@@ -1,0 +1,102 @@
+{% extends 'main_templates/base.html' %}
+{% load static %}
+{% block content %}
+<head>
+  <title>Reviewer dash</title>
+  <link rel="stylesheet" href="{% static 'css/reviewer_dashboard.css' %}">
+</head>
+
+<h3>Submitted Documents</h3>
+
+<form method="get" action="{% url 'reviewer_dash' %}" class="search-form">
+  <div class="search-bar">
+    <input type="text" name="search_query" placeholder="Search...">
+    <button type="submit">Search</button>
+  </div>
+  <div class="checkboxes">
+    <label>
+      <input type="checkbox" name="search_workplace" value="workplace"> Search in Workplace
+    </label>
+    <label>
+      <input type="checkbox" name="search_topic" value="topic"> Search in Topic
+    </label>
+  </div>
+  {% if search_query %}
+  <a href="{% url 'reviewer_dash' %}" class="clear-search">Clear Search</a>
+  {% endif %}
+</form>
+
+{% if no_document_message %}
+<p>{{ no_document_message }}</p>
+{% else %}
+<ul class="document-list">
+  {% for document in submitted_documents %}
+  <li>
+    <a href="{{ document.document.url }}" download="{{ document.document.name }}">
+      {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
+    </a>
+    <div class="document-actions">
+      <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
+      <form method="post" action="{% url 'remove_document' document.id %}">
+        {% csrf_token %}
+        <button type="submit">Remove</button>
+      </form>
+      <form method="post" action="{% url 'choose_document' document.id %}">
+        {% csrf_token %}
+        <button type="submit">Choose</button>
+      </form>
+    </div>
+    <div class="document-preview" style="display: none;"></div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<h3>Currently Reviewing</h3>
+
+<ul class="document-list">
+  {% for document in reviewing_documents %}
+  <li>
+    <a href="{{ document.document.url }}" download="{{ document.document.name }}">
+      {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
+    </a>
+    <div class="document-actions">
+      <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
+    </div>
+    <div class="document-preview" style="display: none;"></div>
+  </li>
+  {% endfor %}
+</ul>
+
+<script>
+  document.querySelectorAll('.preview-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+          const documentId = this.getAttribute('data-document-id');
+          const documentUrl = this.getAttribute('data-document-url');
+          const previewDiv = this.parentElement.nextElementSibling;
+
+          if (previewDiv.style.display === 'none' || previewDiv.style.display === '') {
+              if (documentUrl.endsWith('.pdf')) {
+                  previewDiv.innerHTML = `<iframe src="${documentUrl}" width="100%" height="500px" frameborder="0"></iframe>`;
+                  previewDiv.style.display = 'block';
+              } else if (documentUrl.endsWith('.docx')) {
+                  fetch(`/preview_document/${documentId}/`)
+                      .then(response => response.text())
+                      .then(data => {
+                          previewDiv.innerHTML = `<pre>${data}</pre>`;
+                          previewDiv.style.display = 'block';
+                      })
+                      .catch(error => console.error('Error fetching document:', error));
+              } else {
+                  previewDiv.innerHTML = 'Unsupported file format';
+                  previewDiv.style.display = 'block';
+              }
+          } else {
+              previewDiv.style.display = 'none';
+          }
+      });
+  });
+</script>
+
+
+{% endblock %}

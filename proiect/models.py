@@ -8,12 +8,20 @@ class CustomUser(AbstractUser): # user normal si revieweri, ii diferentiem prin 
     references = models.TextField(blank=True, null=True)
 
 class UploadedDocument(models.Model):
+    STATUS_CHOICES = [
+        ('UPLOADED', 'Uploaded'),
+        ('SUBMITTED', 'Submitted for Review'),
+        ('UNDER_REVIEW', 'Under Review'),
+        ('REVIEWED', 'Reviewed'),
+    ]
+
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     document = models.FileField(upload_to='uploaded_documents/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     workplace = models.CharField(max_length=255, blank=True, null=True)
     topic = models.CharField(max_length=255, default='', blank=True)
-
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='UPLOADED')
+    reviewer = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='reviewed_documents')
 
 class ReviewerRequest(models.Model):
     email = models.EmailField(unique=True)

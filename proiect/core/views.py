@@ -9,6 +9,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from docx import Document
+from django.http import HttpResponse
+from django.db.models import Q
+from django.shortcuts import redirect
+from os.path import basename
 
 import spacy
 import numpy as np
@@ -33,7 +38,7 @@ def index(request):
         'country_reviewer_count': country_reviewer_count,
         'reviewer_count': reviewer_count,
     }
-    return render(request, "index.html", context)
+    return render(request, "main_templates/index.html", context)
 
 nlp = spacy.load("en_core_web_md")
 
@@ -67,7 +72,7 @@ def perform_simple_test(request, document_id):
     else:
         test_result = "Test failed"
 
-    return render(request, 'simple_test_result.html', {'user_document': user_document, 'test_result': test_result})
+    return render(request, 'review_templates/simple_test_result.html', {'user_document': user_document, 'test_result': test_result})
 
 
 
@@ -86,13 +91,14 @@ def user_dash(request):
     else:
         form = DocumentUploadForm()
 
-    return render(request, 'user_dashboard.html', {'form': form, 'documents': documents})
+    return render(request, 'dashboard_templates/user_dashboard.html', {'form': form, 'documents': documents})
 
 @login_required
 def remove_document(request, document_id):
     document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     document.delete()
-    return redirect('user_dash')
+    # Redirect to the current page
+    return redirect(request.META.get('HTTP_REFERER', ''))
 
 @login_required
 def send_to_review(request, document_id):
@@ -102,6 +108,10 @@ def send_to_review(request, document_id):
         workplace = request.POST.get('workplace')
         topic = request.POST.get('topic')
 
+        # Update the status of the document to "SUBMITTED"
+        document.status = 'SUBMITTED'
+        document.save()
+
         reviewers = get_user_model().objects.filter(is_reviewer=True).exclude(current_workplace=workplace)
 
         for reviewer in reviewers:
@@ -109,28 +119,116 @@ def send_to_review(request, document_id):
                 user=reviewer,
                 document=document.document,
                 workplace=workplace,
-                topic=topic
+                topic=topic,
+                status='SUBMITTED',
+                reviewer=reviewer
             )
 
         return redirect('user_dash')
 
     return render(request, 'user_dashboard.html', {'document': document, 'form': DocumentUploadForm()})
 
+
 #reviewer
 @login_required
 def reviewer_dash(request):
     reviewer = request.user
+    submitted_documents = UploadedDocument.objects.filter(user=reviewer, status='SUBMITTED')
+    reviewing_documents = UploadedDocument.objects.filter(user=reviewer, status='UNDER_REVIEW')
 
-    documents_to_review = UploadedDocument.objects.filter(user=reviewer)
+    search_query = request.GET.get('search_query')
+    search_workplace = request.GET.get('search_workplace')
+    search_topic = request.GET.get('search_topic')
 
-    return render(request, "reviewer_dashboard.html", {'documents_to_review': documents_to_review})
+    if search_query:
+        # Create a Q object to construct the query
+        query_filter = Q()
+
+        if search_workplace and search_topic:
+            # Search in both workplace and topic
+            query_filter |= Q(workplace__icontains=search_query) | Q(topic__icontains=search_query)
+        elif search_workplace:
+            # Search in workplace only
+            query_filter |= Q(workplace__icontains=search_query)
+        elif search_topic:
+            # Search in topic only
+            query_filter |= Q(topic__icontains=search_query)
+        else:
+            # No checkbox selected, search in both workplace and topic
+            query_filter |= Q(workplace__icontains=search_query) | Q(topic__icontains=search_query)
+
+        # Apply the filter to the queryset
+        submitted_documents = submitted_documents.filter(query_filter)
+
+        if not submitted_documents.exists():
+            # If no document matches the query, set a message
+            no_document_message = "No document matched the query."
+        else:
+            no_document_message = None
+    else:
+        search_query = None
+        no_document_message = None
+
+    return render(request, "dashboard_templates/reviewer_dashboard.html", {'submitted_documents': submitted_documents, 'reviewing_documents': reviewing_documents, 'search_query': search_query, 'no_document_message': no_document_message})
+
+@login_required
+def choose_document(request, document_id):
+    # Get the document with the provided document_id
+    document = get_object_or_404(UploadedDocument, id=document_id, user=request.user, status='SUBMITTED')
+    document.status = 'UNDER_REVIEW'
+    document.save()
+    # Get the name of the current document
+    document_name = basename(document.document.name)
+    
+    # Query all documents with the same name
+    documents_with_same_name = UploadedDocument.objects.filter(document__icontains=document_name)
+    
+    # Loop through each document with the same name
+    for document in documents_with_same_name:
+        # Check if the reviewer field is NULL
+        if not document.reviewer:
+            # Update the status to 'UNDER_REVIEW'
+            document.status = 'UNDER_REVIEW'
+            document.save()
+    
+    # Redirect to the reviewer dashboard
+    return redirect('reviewer_dash')
 
 #admin
 @login_required
 def admin_dash(request):
     signup_requests = ReviewerRequest.objects.all()
-    print(signup_requests)
-    return render(request, "admin_dashboard.html", {'signup_requests': signup_requests})
+
+    # Retrieve ongoing reviews
+    ongoing_reviews = UploadedDocument.objects.filter(status='UNDER_REVIEW', reviewer=None)
+
+    # Initialize a dictionary to hold ongoing reviewers for each document
+    ongoing_reviewers_dict = {}
+
+    # Handle search query
+    search_query = request.GET.get('search_query')
+    if search_query:
+        ongoing_reviews = ongoing_reviews.filter(document__icontains=search_query)
+
+    # Identify users and reviewers for each document
+    for document in ongoing_reviews:
+        # Fetch ongoing reviewers for the current document
+        ongoing_reviewers = UploadedDocument.objects.filter(
+            document__icontains=document.document.name,
+            reviewer__isnull=False,
+            status='UNDER_REVIEW'
+        ).values_list('reviewer__username', 'reviewer__email').distinct()
+
+        # Add ongoing reviewers to the dictionary
+        ongoing_reviewers_dict[document] = ongoing_reviewers
+
+    return render(request, "dashboard_templates/admin_dashboard.html", {
+        'signup_requests': signup_requests,
+        'ongoing_reviews': ongoing_reviews,
+        'ongoing_reviewers_dict': ongoing_reviewers_dict,
+        'search_query': search_query,  # Pass the search query back to the template
+    })
+
 
 def approve_signup_request(request, request_id):
     signup_request = get_object_or_404(ReviewerRequest, id=request_id)
@@ -152,6 +250,8 @@ def deny_signup_request(request, request_id):
     signup_request.delete()
     return redirect('admin_dash')
 
+
+
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
@@ -165,7 +265,7 @@ def login_view(request):
     else:
         form = AuthenticationForm()
 
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'auth_templates/login.html', {'form': form})
 
 def signup_user(request):
     if request.method == 'POST':
@@ -177,7 +277,7 @@ def signup_user(request):
 
     form.fields['is_reviewer'].disabled = True
 
-    return render(request, 'signup_user.html', {'form': form})
+    return render(request, 'auth_templates/signup_user.html', {'form': form})
 
 def signup_reviewer(request):
     if request.method == 'POST':
@@ -200,22 +300,22 @@ def signup_reviewer(request):
     else:
         form = ReviewerSignupForm()
 
-    return render(request, 'signup_reviewer.html', {'form': form})
+    return render(request, 'auth_templates/signup_reviewer.html', {'form': form})
 
 def signup_reviewer_confirmation(request):
 
-    return render(request, "signup_reviewer_confirmation.html")
+    return render(request, "auth_templates/signup_reviewer_confirmation.html")
 
 def your_view(request):
     user = request.user
 
-    return render(request, 'base.html', {'user': user})
+    return render(request, 'main_templates/base.html', {'user': user})
 
 
 #help
 
 def help_page(request):
-    return render(request, 'help.html')
+    return render(request, 'main_templates/help.html')
 
 def contact_form(request):
     if request.method == 'POST':
@@ -247,3 +347,22 @@ def get_country_from_ip(request):
         return None
     
 
+def preview_document(request, document_id):
+    try:
+        document = UploadedDocument.objects.get(id=document_id)
+        file_path = document.document.path
+        if file_path.endswith('.pdf'):
+            # For PDF files, return the file directly
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type='application/pdf')
+            return response
+        elif file_path.endswith('.docx'):
+            # For .docx files, extract text and return it
+            doc = Document(file_path)
+            text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+            return HttpResponse(text, content_type='text/plain; charset=utf-8')  # Set charset=utf-8
+        else:
+            # Handle other file types or unsupported types
+            return HttpResponse("Unsupported file format")
+    except UploadedDocument.DoesNotExist:
+        return HttpResponse("Document not found", status=404)

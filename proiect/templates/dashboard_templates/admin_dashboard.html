@@ -1,0 +1,48 @@
+{% extends 'main_templates/base.html' %}
+{% load static %}
+{% block content %}
+
+<head>
+  <title>Admin dash</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+
+<h3>Approve Reviewer Requests</h3>
+<ul>
+  {% for request in signup_requests %}
+  <li>
+    {{ request.username }} - {{ request.email }} - {{ request.current_workplace }}
+    <form method="post" action="{% url 'approve_signup_request' request.id %}">
+      {% csrf_token %}
+      <button type="submit">Approve</button>
+    </form>
+    <form method="post" action="{% url 'deny_signup_request' request.id %}">
+      {% csrf_token %}
+      <button type="submit">Deny</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+
+{% load custom_tags %}
+<h3>Ongoing Reviews</h3>
+<form method="GET" action="{% url 'admin_dash' %}">
+  <input type="text" name="search_query" placeholder="Search by document name">
+  <button type="submit">Search</button>
+  {% if search_query %}
+    <a href="{% url 'admin_dash' %}" class="clear-search">Clear Search</a>
+  {% endif %}
+</form>
+
+<ul>
+  {% for document, ongoing_reviewers in ongoing_reviewers_dict.items %}
+    <li>
+      Document: {{ document.document.name|basename }} <br> User: {{ document.user.username }} - Email: {{ document.user.email }}<br>
+      {% for reviewer_username, reviewer_email in ongoing_reviewers %}
+        Reviewer: {{ reviewer_username }} - Email: {{ reviewer_email }}<br><br>
+      {% endfor %}
+    </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'main_templates/base.html' %}
+{% load django_browser_reload %}
+{% load static %}
+{% block content %}
+<head>
+    <title>User dash</title>
+    <link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}">
+</head>
+
+<h3>Upload Document</h3>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">Upload Document</button>
+</form> 
+
+<h3>Uploaded Documents</h3>
+<ul>
+    {% for document in documents %}
+    <li>
+        {{ document.document.name }}
+        <p>Status: {{ document.status }}</p>
+        <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
+        <form method="post" action="{% url 'remove_document' document.id %}">
+            {% csrf_token %}
+            <button type="submit">Remove</button>
+        </form>
+        {% if document.status == 'UPLOADED' %}
+        <form method="post" action="{% url 'send_to_review' document.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="workplace" value="{{ document.workplace }}">
+            <input type="hidden" name="topic" value="{{ document.topic }}">
+            <button type="submit">Send to Review</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{% url 'perform_simple_test' document.id %}">
+            {% csrf_token %}
+            <button type="submit">Simple Test</button>
+        </form>
+        <div class="document-preview" style="display: none;"></div>
+    </li>
+    {% endfor %}
+</ul>
+
+<script>
+    document.querySelectorAll('.preview-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const documentId = this.getAttribute('data-document-id');
+            const documentUrl = this.getAttribute('data-document-url');
+            const previewDiv = this.parentElement.querySelector('.document-preview');
+            
+            if (previewDiv.style.display === 'none' || previewDiv.style.display === '') {
+                if (documentUrl.endsWith('.pdf')) {
+                    previewDiv.innerHTML = `<iframe src="${documentUrl}" width="100%" height="1000px" frameborder="0"></iframe>`;
+                    previewDiv.style.display = 'block';
+                } else if (documentUrl.endsWith('.docx')) {
+                    fetch(`/preview_document/${documentId}/`)
+                        .then(response => response.text())
+                        .then(data => {
+                            previewDiv.innerHTML = `<pre>${data}</pre>`;
+                            previewDiv.style.display = 'block';
+                        })
+                        .catch(error => console.error('Error fetching document:', error));
+                } else {
+                    previewDiv.innerHTML = 'Unsupported file format';
+                    previewDiv.style.display = 'block';
+                }
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+{% endblock %}
