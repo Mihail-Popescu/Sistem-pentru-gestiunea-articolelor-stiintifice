@@ -1,0 +1,14 @@
+{% extends 'main_templates/base.html' %}
+{% block content %}
+<div style="background-color: white; padding: 20px; border: 1px solid black; border-radius: 5px;">
+    <p>
+        {% for word in text.split %}
+            {% if word in mistakes %}
+                <span style="background-color: yellow;">{{ word }}</span>
+            {% else %}
+                {{ word }}
+            {% endif %}
+        {% endfor %}
+    </p>
+</div>
+{% endblock %}

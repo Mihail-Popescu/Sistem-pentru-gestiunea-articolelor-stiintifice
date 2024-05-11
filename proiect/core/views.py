@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from proiect.forms import ReviewerSignupForm,DocumentUploadForm
 from proiect.models import UploadedDocument, ReviewerRequest
 from django.contrib.auth import get_user_model
-from sklearn.metrics.pairwise import cosine_similarity
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
@@ -14,10 +13,21 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.shortcuts import redirect
 from os.path import basename
+from gensim import corpora, similarities
+from transformers import BertTokenizer, BertForSequenceClassification
+from wordcloud import WordCloud
 
+import fitz
+import enchant
+import io
+import base64
+import torch
 import spacy
-import numpy as np
 import requests
+
+nlp = spacy.load("en_core_web_sm")
+
+
 
 def index(request):
 
@@ -42,37 +52,6 @@ def index(request):
 
 nlp = spacy.load("en_core_web_md")
 
-#ai-testing
-@login_required
-def perform_simple_test(request, document_id):
-
-    user_document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
-    
-    reference_documents = UploadedDocument.objects.exclude(user=request.user).exclude(id=document_id)
-
-    document_content_bytes = user_document.document.read()
-    document_content = document_content_bytes.decode('utf-8') if isinstance(document_content_bytes, bytes) else document_content_bytes
-
-    query_embedding = nlp(document_content).vector.reshape(1, -1)
-
-    reference_embeddings = [nlp(doc.document.read().decode('utf-8')).vector for doc in reference_documents]
-    reference_embeddings = np.array(reference_embeddings).reshape(len(reference_embeddings), -1)
-
-    similarity_threshold = 0.98
-
-    similarity_values = cosine_similarity(query_embedding, reference_embeddings)[0]
-    max_similarity = max(similarity_values)
-
-    print("Query Vector:", query_embedding)
-    print("Reference Vectors:", reference_embeddings)
-    print("Cosine Similarity Values:", similarity_values)
-
-    if max_similarity < similarity_threshold:
-        test_result = "Test passed"
-    else:
-        test_result = "Test failed"
-
-    return render(request, 'review_templates/simple_test_result.html', {'user_document': user_document, 'test_result': test_result})
 
 
 
@@ -97,7 +76,6 @@ def user_dash(request):
 def remove_document(request, document_id):
     document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
     document.delete()
-    # Redirect to the current page
     return redirect(request.META.get('HTTP_REFERER', ''))
 
 @login_required
@@ -108,7 +86,6 @@ def send_to_review(request, document_id):
         workplace = request.POST.get('workplace')
         topic = request.POST.get('topic')
 
-        # Update the status of the document to "SUBMITTED"
         document.status = 'SUBMITTED'
         document.save()
 
@@ -128,6 +105,193 @@ def send_to_review(request, document_id):
 
     return render(request, 'user_dashboard.html', {'document': document, 'form': DocumentUploadForm()})
 
+def preview_document(request, document_id):
+    try:
+        document = UploadedDocument.objects.get(id=document_id)
+        file_path = document.document.path
+        if file_path.endswith('.pdf'):
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type='application/pdf')
+            return response
+        elif file_path.endswith('.docx'):
+            doc = Document(file_path)
+            text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+            return HttpResponse(text, content_type='text/plain; charset=utf-8')
+        else:
+            return HttpResponse("Unsupported file format")
+    except UploadedDocument.DoesNotExist:
+        return HttpResponse("Document not found", status=404)
+
+def spell_check_view(request):
+    if request.method == 'POST':
+        document_id = request.POST.get('document_id')
+        try:
+            document = UploadedDocument.objects.get(id=document_id)
+            file_path = document.document.path
+
+            if file_path.endswith('.pdf'):
+                text = extract_text_from_pdf(file_path)
+            elif file_path.endswith('.docx'):
+                text = extract_text_from_docx(file_path)
+            else:
+                return render(request, 'error.html', {'message': 'Unsupported file format'})
+
+            mistakes = spell_check(text)
+
+            return render(request, 'spell_check_results.html', {'text': text, 'mistakes': mistakes})
+        except UploadedDocument.DoesNotExist:
+            return render(request, 'error.html', {'message': 'Document not found'})
+
+def extract_text_from_pdf(pdf_path):
+    text = ''
+    with fitz.open(pdf_path) as doc:
+        for page in doc:
+            text += page.get_text()
+    return text
+
+def extract_text_from_docx(docx_path):
+    doc = Document(docx_path)
+    text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+    return text
+
+def spell_check(text):
+    d = enchant.Dict("en_US")
+    mistakes = []
+    for word in text.split():
+        if not d.check(word):
+            mistakes.append(word)
+    return mistakes
+
+def ner_view(request):
+    if request.method == 'POST':
+        document_id = request.POST.get('document_id')
+        try:
+            document = UploadedDocument.objects.get(id=document_id)
+            file_path = document.document.path
+
+            if file_path.endswith('.pdf'):
+                text = extract_text_from_pdf(file_path)
+            elif file_path.endswith('.docx'):
+                text = extract_text_from_docx(file_path)
+            else:
+                return render(request, 'error.html', {'message': 'Unsupported file format'})
+
+            entities = ner_extraction(text)
+
+            word_cloud_img = generate_word_cloud(entities)
+
+            return render(request, 'ner_results.html', {'text': text, 'word_cloud_img': word_cloud_img, 'entities': entities})
+        except UploadedDocument.DoesNotExist:
+            return render(request, 'error.html', {'message': 'Document not found'})
+
+def ner_extraction(text):
+    """Extract named entities from text."""
+
+    doc = nlp(text)
+    
+    entities = [(ent.text, ent.label_) for ent in doc.ents]
+    return entities
+
+def generate_word_cloud(entities):
+    entity_freq = {}
+    for entity, _ in entities:
+        entity_freq[entity] = entity_freq.get(entity, 0) + 1
+    
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(entity_freq)
+    
+    img_buffer = io.BytesIO()
+    wordcloud.to_image().save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    
+    img_str = base64.b64encode(img_buffer.read()).decode('utf-8')
+    
+    return img_str
+
+
+
+def analyze_sentiment_bert(text):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
+
+    inputs = tokenizer(text, return_tensors='pt', padding=True, truncation=True)
+    
+    outputs = model(**inputs)
+
+    predicted_class = torch.argmax(outputs.logits, dim=1).item()
+    sentiment = ['negative', 'neutral', 'positive'][predicted_class]
+
+    return sentiment
+
+def analyze_sentiment_view(request):
+    if request.method == 'POST':
+        document_id = request.POST.get('document_id')
+        try:
+            document = UploadedDocument.objects.get(id=document_id)
+            file_path = document.document.path
+
+            if file_path.endswith('.pdf'):
+                text = extract_text_from_pdf(file_path)
+            elif file_path.endswith('.docx'):
+                text = extract_text_from_docx(file_path)
+            else:
+                return render(request, 'error.html', {'message': 'Unsupported file format'})
+
+            sentiment = analyze_sentiment_bert(text)
+
+            return render(request, 'sentiment_results.html', {'text': text, 'sentiment': sentiment})
+        except UploadedDocument.DoesNotExist:
+            return render(request, 'error.html', {'message': 'Document not found'})
+
+def compare_documents(selected_document_id):
+    try:
+        selected_document = UploadedDocument.objects.get(id=selected_document_id)
+        selected_document_text = get_document_text(selected_document)
+
+        other_documents = UploadedDocument.objects.filter(~Q(id=selected_document_id), reviewer__isnull=True)
+
+        other_document_texts = [get_document_text(doc) for doc in other_documents]
+
+        processed_texts = [preprocess_text(text) for text in [selected_document_text] + other_document_texts]
+
+        dictionary = corpora.Dictionary(processed_texts)
+        corpus = [dictionary.doc2bow(text) for text in processed_texts]
+
+        index = similarities.MatrixSimilarity(corpus)
+
+        sims = index[corpus[0]]
+
+        sorted_sims = sorted(enumerate(sims), key=lambda item: -item[1])
+
+        top_similar_documents = [(other_documents[i], sim) for i, sim in sorted_sims[:2]]
+
+        return top_similar_documents
+
+    except UploadedDocument.DoesNotExist:
+        return None
+    
+def get_document_text(document):
+    if document.document.path.endswith('.pdf'):
+        return extract_text_from_pdf(document.document.path)
+    elif document.document.path.endswith('.docx'):
+        return extract_text_from_docx(document.document.path)
+    else:
+        return ""
+
+def compare_documents_view(request):
+    if request.method == 'POST':
+        document_id = request.POST.get('document_id')
+        similar_documents = compare_documents(document_id)
+        if similar_documents is not None:
+            return render(request, 'similarity_results.html', {'similar_documents': similar_documents})
+        else:
+            return render(request, 'error.html', {'message': 'No similar documents found.'})
+    else:
+        return render(request, 'error.html', {'message': 'Invalid request method'})
+
+def preprocess_text(text):
+
+    return text.split()
+
 
 #reviewer
 @login_required
@@ -141,27 +305,21 @@ def reviewer_dash(request):
     search_topic = request.GET.get('search_topic')
 
     if search_query:
-        # Create a Q object to construct the query
+
         query_filter = Q()
 
         if search_workplace and search_topic:
-            # Search in both workplace and topic
             query_filter |= Q(workplace__icontains=search_query) | Q(topic__icontains=search_query)
         elif search_workplace:
-            # Search in workplace only
             query_filter |= Q(workplace__icontains=search_query)
         elif search_topic:
-            # Search in topic only
             query_filter |= Q(topic__icontains=search_query)
         else:
-            # No checkbox selected, search in both workplace and topic
             query_filter |= Q(workplace__icontains=search_query) | Q(topic__icontains=search_query)
 
-        # Apply the filter to the queryset
         submitted_documents = submitted_documents.filter(query_filter)
 
         if not submitted_documents.exists():
-            # If no document matches the query, set a message
             no_document_message = "No document matched the query."
         else:
             no_document_message = None
@@ -173,25 +331,18 @@ def reviewer_dash(request):
 
 @login_required
 def choose_document(request, document_id):
-    # Get the document with the provided document_id
     document = get_object_or_404(UploadedDocument, id=document_id, user=request.user, status='SUBMITTED')
     document.status = 'UNDER_REVIEW'
     document.save()
-    # Get the name of the current document
     document_name = basename(document.document.name)
     
-    # Query all documents with the same name
     documents_with_same_name = UploadedDocument.objects.filter(document__icontains=document_name)
     
-    # Loop through each document with the same name
     for document in documents_with_same_name:
-        # Check if the reviewer field is NULL
         if not document.reviewer:
-            # Update the status to 'UNDER_REVIEW'
             document.status = 'UNDER_REVIEW'
             document.save()
     
-    # Redirect to the reviewer dashboard
     return redirect('reviewer_dash')
 
 #admin
@@ -199,34 +350,28 @@ def choose_document(request, document_id):
 def admin_dash(request):
     signup_requests = ReviewerRequest.objects.all()
 
-    # Retrieve ongoing reviews
     ongoing_reviews = UploadedDocument.objects.filter(status='UNDER_REVIEW', reviewer=None)
 
-    # Initialize a dictionary to hold ongoing reviewers for each document
     ongoing_reviewers_dict = {}
 
-    # Handle search query
     search_query = request.GET.get('search_query')
     if search_query:
         ongoing_reviews = ongoing_reviews.filter(document__icontains=search_query)
 
-    # Identify users and reviewers for each document
     for document in ongoing_reviews:
-        # Fetch ongoing reviewers for the current document
         ongoing_reviewers = UploadedDocument.objects.filter(
             document__icontains=document.document.name,
             reviewer__isnull=False,
             status='UNDER_REVIEW'
         ).values_list('reviewer__username', 'reviewer__email').distinct()
 
-        # Add ongoing reviewers to the dictionary
         ongoing_reviewers_dict[document] = ongoing_reviewers
 
     return render(request, "dashboard_templates/admin_dashboard.html", {
         'signup_requests': signup_requests,
         'ongoing_reviews': ongoing_reviews,
         'ongoing_reviewers_dict': ongoing_reviewers_dict,
-        'search_query': search_query,  # Pass the search query back to the template
+        'search_query': search_query,
     })
 
 
@@ -335,7 +480,6 @@ def contact_form(request):
     
 #ip geo
 
-
 def get_country_from_ip(request):
     
     try:
@@ -347,22 +491,3 @@ def get_country_from_ip(request):
         return None
     
 
-def preview_document(request, document_id):
-    try:
-        document = UploadedDocument.objects.get(id=document_id)
-        file_path = document.document.path
-        if file_path.endswith('.pdf'):
-            # For PDF files, return the file directly
-            with open(file_path, 'rb') as f:
-                response = HttpResponse(f.read(), content_type='application/pdf')
-            return response
-        elif file_path.endswith('.docx'):
-            # For .docx files, extract text and return it
-            doc = Document(file_path)
-            text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
-            return HttpResponse(text, content_type='text/plain; charset=utf-8')  # Set charset=utf-8
-        else:
-            # Handle other file types or unsupported types
-            return HttpResponse("Unsupported file format")
-    except UploadedDocument.DoesNotExist:
-        return HttpResponse("Document not found", status=404)

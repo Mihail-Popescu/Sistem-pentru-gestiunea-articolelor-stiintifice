@@ -34,10 +34,27 @@
             <button type="submit">Send to Review</button>
         </form>
         {% endif %}
-        <form method="post" action="{% url 'perform_simple_test' document.id %}">
+        <form method="post" action="{% url 'spell_check' %}">
             {% csrf_token %}
-            <button type="submit">Simple Test</button>
+            <input type="hidden" name="document_id" value="{{ document.id }}">
+            <button type="submit" class="spell-check-btn">Spell Check</button>
         </form>
+        <form method="post" action="{% url 'ner_extraction' %}">
+            {% csrf_token %}
+            <input type="hidden" name="document_id" value="{{ document.id }}">
+            <button type="submit" class="ner-extraction-btn">Named Entity Recognition</button>
+        </form>
+        <form method="post" action="{% url 'analyze_sentiment' %}">
+            {% csrf_token %}
+            <input type="hidden" name="document_id" value="{{ document.id }}">
+            <button type="submit" class="sentiment-analysis-btn">Sentiment Analysis</button>
+        </form>
+        <form method="post" action="{% url 'compare_documents' %}">
+            {% csrf_token %}
+            <input type="hidden" name="document_id" value="{{ document.id }}">
+            <button type="submit" class="compare-documents-btn">Compare Documents</button>
+        </form>
+        
         <div class="document-preview" style="display: none;"></div>
     </li>
     {% endfor %}
@@ -56,12 +73,12 @@
                     previewDiv.style.display = 'block';
                 } else if (documentUrl.endsWith('.docx')) {
                     fetch(`/preview_document/${documentId}/`)
-                        .then(response => response.text())
-                        .then(data => {
-                            previewDiv.innerHTML = `<pre>${data}</pre>`;
-                            previewDiv.style.display = 'block';
-                        })
-                        .catch(error => console.error('Error fetching document:', error));
+                         .then(response => response.text())
+                         .then(data => {
+                                    previewDiv.innerHTML = `<div class="document-text">${data}</div>`;
+                                    previewDiv.style.display = 'block';
+                                        })
+    .catch(error => console.error('Error fetching document:', error));
                 } else {
                     previewDiv.innerHTML = 'Unsupported file format';
                     previewDiv.style.display = 'block';

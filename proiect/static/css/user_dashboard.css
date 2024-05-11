@@ -68,3 +68,8 @@ li form {
 .preview-btn:hover {
     background-color: #36648b;
 }
+
+.document-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}

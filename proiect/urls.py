@@ -39,10 +39,13 @@ urlpatterns = [
     path('user/approve_signup_request/<int:request_id>/', core_views.approve_signup_request, name='approve_signup_request'),
     path('user/deny_signup_request/<int:request_id>/', core_views.deny_signup_request, name='deny_signup_request'),
     path('signup_reviewer_confirmation/', core_views.signup_reviewer_confirmation, name='signup_reviewer_confirmation'),
-    path('perform_simple_test/<int:document_id>/', core_views.perform_simple_test, name='perform_simple_test'),
     path('contact_form/', core_views.contact_form, name='contact_form'),
     path('preview_document/<int:document_id>/', core_views.preview_document, name='preview_document'),
     path('choose_document/<int:document_id>/', core_views.choose_document, name='choose_document'),
+    path('spell_check/', core_views.spell_check_view, name='spell_check'),
+    path('ner_extraction/', core_views.ner_view, name='ner_extraction'),
+    path('analyze_sentiment/', core_views.analyze_sentiment_view, name='analyze_sentiment'),
+    path('compare_documents/', core_views.compare_documents_view, name='compare_documents'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

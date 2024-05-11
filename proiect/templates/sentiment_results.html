@@ -1,0 +1,15 @@
+{% extends 'main_templates/base.html' %}
+{% block content %}
+<head>
+    <title>Sentiment Analysis Results</title>
+</head>
+
+<h3>Sentiment Analysis Results</h3>
+
+<p><strong>Document Text:</strong></p>
+<div>{{ text }}</div>
+
+<p><strong>Sentiment:</strong> {{ sentiment }}</p>
+
+
+{% endblock %}

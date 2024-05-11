@@ -1,0 +1,34 @@
+{% extends 'main_templates/base.html' %}
+{% block content %}
+<head>
+    <title>Named Entity Recognition Results</title>
+    <style>
+        #wordcloud-img {
+            width: 800px;
+            height: auto;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+        }
+        .entity-list {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<h3>Named Entity Recognition Results</h3>
+
+<p><strong>Document Text:</strong></p>
+<div>{{ text }}</div>
+
+<img id="wordcloud-img" src="data:image/png;base64,{{ word_cloud_img }}" alt="Word Cloud">
+
+<div class="entity-list">
+    <p><strong>Named Entities:</strong></p>
+    <ul>
+        {% for entity, label in entities %}
+            <li>{{ entity }} ({{ label }})</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}
