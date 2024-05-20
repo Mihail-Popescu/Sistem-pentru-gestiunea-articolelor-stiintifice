@@ -46,6 +46,14 @@ urlpatterns = [
     path('ner_extraction/', core_views.ner_view, name='ner_extraction'),
     path('analyze_sentiment/', core_views.analyze_sentiment_view, name='analyze_sentiment'),
     path('compare_documents/', core_views.compare_documents_view, name='compare_documents'),
+    path('change_user_roles/', core_views.change_user_roles, name='change_user_roles'),
+    path('tracker_dash/', core_views.tracker_dash, name='tracker_dash'),
+    path('organizer_dash/', core_views.organizer_dash, name='organizer_dash'),
+    path('create_conference/', core_views.create_conference, name='create_conference'),
+    path('delete_conference/<int:conference_id>/', core_views.delete_conference, name='delete_conference'),
+    path('conferences/', core_views.conferences, name='conferences'),
+    path('assign_user_to_conference/', core_views.assign_user_to_conference, name='assign_user_to_conference'),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

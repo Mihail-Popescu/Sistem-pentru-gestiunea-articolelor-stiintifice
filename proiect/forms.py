@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
 from .models import UploadedDocument
+from .models import Conference
 
 class ReviewerSignupForm(UserCreationForm):
 
@@ -20,3 +21,9 @@ class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = UploadedDocument
         fields = ['document', 'workplace', 'topic']
+
+
+class ConferenceForm(forms.ModelForm):
+    class Meta:
+        model = Conference
+        fields = ['name', 'start_date', 'end_date', 'location', 'description', 'picture']

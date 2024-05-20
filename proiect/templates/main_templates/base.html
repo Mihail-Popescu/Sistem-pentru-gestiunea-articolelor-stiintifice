@@ -20,7 +20,14 @@
                 </a>
             </div>
             <div class="header-right">
+                <a href="{% url 'conferences' %}" class="login-button">Conferences</a>
                 {% if user.is_authenticated %}
+                {% if user.is_tracker %}
+                <a href="{% url 'tracker_dash' %}" class="login-button">Tracker Dashboard</a>
+                {% endif %}
+                {% if user.is_organizer %}
+                <a href="{% url 'organizer_dash' %}" class="login-button">Organizer Dashboard</a>
+                {% endif %}
                 {% if user.is_reviewer %}
                 <a href="{% url 'reviewer_dash' %}" class="login-button">Reviewer Dashboard</a>
                 {% elif user.is_superuser %}

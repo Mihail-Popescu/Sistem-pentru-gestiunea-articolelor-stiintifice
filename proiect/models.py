@@ -2,10 +2,24 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from proiect.settings import AUTH_USER_MODEL
 
-class CustomUser(AbstractUser): # user normal si revieweri, ii diferentiem prin \/
+class CustomUser(AbstractUser): # diferentiem rolurile prin acestea:
     is_reviewer = models.BooleanField(default=False) #
+    is_tracker = models.BooleanField(default=False) #
+    is_organizer = models.BooleanField(default=False) #
     current_workplace = models.CharField(max_length=255, blank=True, null=True)
     references = models.TextField(blank=True, null=True)
+    joined_conferences = models.ManyToManyField('Conference', blank=True, related_name='participants')
+
+class Conference(models.Model):
+    name = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    location = models.CharField(max_length=200)
+    description = models.TextField()
+    picture = models.ImageField(upload_to='conference_pictures/', blank=True, null=True)
+    organizer = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='organized_conferences')
+    trackers = models.ManyToManyField(AUTH_USER_MODEL, blank=True, related_name='tracked_conferences')
+
 
 class UploadedDocument(models.Model):
     STATUS_CHOICES = [

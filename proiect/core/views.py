@@ -2,8 +2,8 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
-from proiect.forms import ReviewerSignupForm,DocumentUploadForm
-from proiect.models import UploadedDocument, ReviewerRequest
+from proiect.forms import ReviewerSignupForm, DocumentUploadForm , ConferenceForm
+from proiect.models import UploadedDocument, ReviewerRequest, Conference, CustomUser
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -16,6 +16,8 @@ from os.path import basename
 from gensim import corpora, similarities
 from transformers import BertTokenizer, BertForSequenceClassification
 from wordcloud import WordCloud
+from datetime import date
+from django.contrib import messages
 
 import fitz
 import enchant
@@ -138,7 +140,7 @@ def spell_check_view(request):
 
             mistakes = spell_check(text)
 
-            return render(request, 'spell_check_results.html', {'text': text, 'mistakes': mistakes})
+            return render(request, 'results_templates/spell_check_results.html', {'text': text, 'mistakes': mistakes})
         except UploadedDocument.DoesNotExist:
             return render(request, 'error.html', {'message': 'Document not found'})
 
@@ -180,7 +182,7 @@ def ner_view(request):
 
             word_cloud_img = generate_word_cloud(entities)
 
-            return render(request, 'ner_results.html', {'text': text, 'word_cloud_img': word_cloud_img, 'entities': entities})
+            return render(request, 'results_templates/ner_results.html', {'text': text, 'word_cloud_img': word_cloud_img, 'entities': entities})
         except UploadedDocument.DoesNotExist:
             return render(request, 'error.html', {'message': 'Document not found'})
 
@@ -238,7 +240,7 @@ def analyze_sentiment_view(request):
 
             sentiment = analyze_sentiment_bert(text)
 
-            return render(request, 'sentiment_results.html', {'text': text, 'sentiment': sentiment})
+            return render(request, 'results_templates/sentiment_results.html', {'text': text, 'sentiment': sentiment})
         except UploadedDocument.DoesNotExist:
             return render(request, 'error.html', {'message': 'Document not found'})
 
@@ -282,7 +284,7 @@ def compare_documents_view(request):
         document_id = request.POST.get('document_id')
         similar_documents = compare_documents(document_id)
         if similar_documents is not None:
-            return render(request, 'similarity_results.html', {'similar_documents': similar_documents})
+            return render(request, 'results_templates/similarity_results.html', {'similar_documents': similar_documents})
         else:
             return render(request, 'error.html', {'message': 'No similar documents found.'})
     else:
@@ -345,34 +347,124 @@ def choose_document(request, document_id):
     
     return redirect('reviewer_dash')
 
+#tracker
+@login_required
+def tracker_dash(request):
+    return render(request, 'dashboard_templates/tracker_dashboard.html')
+
+#organizer
+@login_required
+def organizer_dash(request):
+    conferences = Conference.objects.filter(organizer=request.user)
+    search_query = request.GET.get('search_query', '')
+    users = CustomUser.objects.filter(
+        Q(username__icontains=search_query) | Q(email__icontains=search_query)
+    ) if search_query else None
+    
+    return render(request, 'dashboard_templates/organizer_dashboard.html', {
+        'conferences': conferences,
+        'users': users,
+    })
+
+
+@login_required
+def assign_user_to_conference(request):
+    if request.method == 'POST':
+        for key, value in request.POST.items():
+            if key.startswith('role_'):
+                user_id = key.split('_')[1]
+                role = value
+                conference_id = request.POST.get(f'conference_{user_id}')
+                if conference_id:
+                    user = get_object_or_404(CustomUser, id=user_id)
+                    conference = get_object_or_404(Conference, id=conference_id)
+                    
+                    if role == 'reviewer':
+                        if conference in user.joined_conferences.all():
+                            messages.error(request, f'{user.username} is already a reviewer for this conference.')
+                        elif user in conference.trackers.all():
+                            messages.error(request, f'A user can\'t be both reviewer and tracker for the same conference.')
+                        else:
+                            user.joined_conferences.add(conference)
+                            user.save()
+                            messages.success(request, f'{user.username} has been assigned as a reviewer for {conference.name}.')
+                    
+                    elif role == 'tracker':
+                        if user in conference.trackers.all():
+                            messages.error(request, f'{user.username} is already a tracker for this conference.')
+                        elif conference in user.joined_conferences.all():
+                            messages.error(request, f'A user can\'t be both tracker and reviewer for the same conference.')
+                        else:
+                            conference.trackers.add(user)
+                            conference.save()
+                            messages.success(request, f'{user.username} has been assigned as a tracker for {conference.name}.')
+        
+        return redirect('organizer_dash')
+    return HttpResponse(status=405)
+
+@login_required
+def create_conference(request):
+    if request.method == 'POST':
+        form = ConferenceForm(request.POST, request.FILES)
+        if form.is_valid():
+            conference = form.save(commit=False)
+            conference.organizer = request.user
+            conference.save()
+            return redirect('organizer_dash')
+    else:
+        form = ConferenceForm()
+    return render(request, 'dashboard_templates/organizer_dashboard.html', {'form': form})
+
+@login_required
+def delete_conference(request, conference_id):
+    conference = get_object_or_404(Conference, id=conference_id, organizer=request.user)
+    if request.method == 'POST':
+        conference.delete()
+        return redirect('organizer_dash')
+    return HttpResponse(status=405)
+
 #admin
 @login_required
 def admin_dash(request):
     signup_requests = ReviewerRequest.objects.all()
-
     ongoing_reviews = UploadedDocument.objects.filter(status='UNDER_REVIEW', reviewer=None)
-
     ongoing_reviewers_dict = {}
 
     search_query = request.GET.get('search_query')
     if search_query:
         ongoing_reviews = ongoing_reviews.filter(document__icontains=search_query)
-
+    
     for document in ongoing_reviews:
         ongoing_reviewers = UploadedDocument.objects.filter(
             document__icontains=document.document.name,
             reviewer__isnull=False,
             status='UNDER_REVIEW'
         ).values_list('reviewer__username', 'reviewer__email').distinct()
-
         ongoing_reviewers_dict[document] = ongoing_reviewers
-
-    return render(request, "dashboard_templates/admin_dashboard.html", {
+    
+    user_search_query = request.GET.get('user_search_query')
+    users = []
+    if user_search_query:
+        users = get_user_model().objects.filter(username__icontains=user_search_query)
+    
+    return render(request, 'dashboard_templates/admin_dashboard.html', {
         'signup_requests': signup_requests,
         'ongoing_reviews': ongoing_reviews,
         'ongoing_reviewers_dict': ongoing_reviewers_dict,
         'search_query': search_query,
+        'user_search_query': user_search_query,
+        'users': users,
     })
+
+@login_required
+def change_user_roles(request):
+    if request.method == 'POST':
+        for user in get_user_model().objects.all():
+            user.is_reviewer = request.POST.get(f'is_reviewer_{user.id}') == 'on'
+            user.is_tracker = request.POST.get(f'is_tracker_{user.id}') == 'on'
+            user.is_organizer = request.POST.get(f'is_organizer_{user.id}') == 'on'
+            user.save()
+    return redirect('admin_dash')
 
 
 def approve_signup_request(request, request_id):
@@ -478,7 +570,15 @@ def contact_form(request):
 
         return JsonResponse({'status': 'success'})
     
-#ip geo
+# conferences 
+
+def conferences(request):
+    today = date.today()
+    ongoing_conferences = Conference.objects.filter(start_date__lte=today, end_date__gte=today)
+    planned_conferences = Conference.objects.filter(start_date__gt=today)
+    return render(request, 'main_templates/conferences.html', {'ongoing_conferences': ongoing_conferences, 'planned_conferences': planned_conferences})
+
+# ip geo
 
 def get_country_from_ip(request):
     

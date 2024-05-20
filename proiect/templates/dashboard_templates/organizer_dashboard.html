@@ -1,0 +1,99 @@
+{% extends 'main_templates/base.html' %}
+{% load static %}
+{% block content %}
+<head>
+  <title>Organizer Dashboard</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/organizer_dashboard.css' %}">
+</head>
+
+
+<h2>Create a New Conference</h2>
+<form method="post" action="{% url 'create_conference' %}" enctype="multipart/form-data">
+  {% csrf_token %}
+  <label for="name">Conference Name:</label>
+  <input type="text" id="name" name="name" required><br>
+
+  <label for="start_date">Start Date:</label>
+  <input type="date" id="start_date" name="start_date" required><br>
+
+  <label for="end_date">End Date:</label>
+  <input type="date" id="end_date" name="end_date" required><br>
+
+  <label for="location">Location:</label>
+  <input type="text" id="location" name="location" required><br>
+
+  <label for="description">Description:</label>
+  <textarea id="description" name="description" required></textarea><br>
+
+  <label for="picture">Picture:</label>
+  <input type="file" id="picture" name="picture"><br>
+
+  <button type="submit">Create Conference</button>
+</form>
+
+<h2>Active Conferences</h2>
+<ul>
+  {% for conference in conferences %}
+  <li>
+    <strong>{{ conference.name }}</strong><br>
+    Start Date: {{ conference.start_date }}<br>
+    End Date: {{ conference.end_date }}<br>
+    Location: {{ conference.location }}<br>
+    Description: {{ conference.description }}<br>
+    Organizer: {{ conference.organizer }} <br>
+    {% if conference.picture %}
+    <img src="{{ conference.picture.url }}" alt="{{ conference.name }}" width="200"><br>
+    {% endif %}
+    <form method="post" action="{% url 'delete_conference' conference.id %}">
+      {% csrf_token %}
+      <button type="submit">Delete</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+
+<h2>Assign User to Conference</h2>
+<form method="get" action="{% url 'organizer_dash' %}">
+  <input type="text" name="search_query" placeholder="Search for users">
+  <button type="submit">Search</button>
+</form>
+
+{% if users %}
+  <form method="post" action="{% url 'assign_user_to_conference' %}">
+    {% csrf_token %}
+    <ul>
+      {% for user in users %}
+      <li>
+        {{ user.username }} ({{ user.email }})<br>
+        <label for="role_{{ user.id }}">Role:</label>
+        <select id="role_{{ user.id }}" name="role_{{ user.id }}">
+          <option value="">Select role</option>
+          <option value="reviewer">Reviewer</option>
+          <option value="tracker">Tracker</option>
+        </select><br>
+        
+        <label for="conference_{{ user.id }}">Conference:</label>
+        <select id="conference_{{ user.id }}" name="conference_{{ user.id }}">
+          <option value="">Select conference</option>
+          {% for conference in conferences %}
+          <option value="{{ conference.id }}">{{ conference.name }}</option>
+          {% endfor %}
+        </select>
+      </li>
+      {% endfor %}
+    </ul>
+    <button type="submit">Submit</button>
+  </form>
+{% endif %}
+
+{% if messages %}
+  <div>
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% endblock %}

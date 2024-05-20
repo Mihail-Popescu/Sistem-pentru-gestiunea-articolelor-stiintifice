@@ -3,7 +3,7 @@
 {% block content %}
 
 <head>
-  <title>Admin dash</title>
+  <title>Admin Dashboard</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/admin_dashboard.css' %}">
 </head>
 
@@ -23,6 +23,40 @@
   </li>
   {% endfor %}
 </ul>
+
+<h3>Change User Roles</h3>
+<form method="GET" action="{% url 'admin_dash' %}">
+  <input type="text" name="user_search_query" placeholder="Search by username">
+  <button type="submit">Search</button>
+  {% if user_search_query %}
+    <a href="{% url 'admin_dash' %}" class="clear-search">Clear Search</a>
+  {% endif %}
+</form>
+
+<form method="POST" action="{% url 'change_user_roles' %}">
+  {% csrf_token %}
+  <ul>
+    {% for user in users %}
+    <li>
+      Username: {{ user.username }} - Email: {{ user.email }}
+      <br>
+      <label>
+        Reviewer:
+        <input type="checkbox" name="is_reviewer_{{ user.id }}" {% if user.is_reviewer %}checked{% endif %}>
+      </label>
+      <label>
+        Tracker:
+        <input type="checkbox" name="is_tracker_{{ user.id }}" {% if user.is_tracker %}checked{% endif %}>
+      </label>
+      <label>
+        Organizer:
+        <input type="checkbox" name="is_organizer_{{ user.id }}" {% if user.is_organizer %}checked{% endif %}>
+      </label>
+    </li>
+    {% endfor %}
+  </ul>
+  <button type="submit">Save Changes</button>
+</form>
 
 {% load custom_tags %}
 <h3>Ongoing Reviews</h3>
