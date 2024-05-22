@@ -42,6 +42,7 @@ urlpatterns = [
     path('contact_form/', core_views.contact_form, name='contact_form'),
     path('preview_document/<int:document_id>/', core_views.preview_document, name='preview_document'),
     path('choose_document/<int:document_id>/', core_views.choose_document, name='choose_document'),
+    path('return_document/<int:document_id>/', core_views.return_document, name='return_document'),
     path('spell_check/', core_views.spell_check_view, name='spell_check'),
     path('ner_extraction/', core_views.ner_view, name='ner_extraction'),
     path('analyze_sentiment/', core_views.analyze_sentiment_view, name='analyze_sentiment'),
@@ -53,6 +54,9 @@ urlpatterns = [
     path('delete_conference/<int:conference_id>/', core_views.delete_conference, name='delete_conference'),
     path('conferences/', core_views.conferences, name='conferences'),
     path('assign_user_to_conference/', core_views.assign_user_to_conference, name='assign_user_to_conference'),
+    path('reject_document/<int:document_id>/', core_views.reject_document, name='reject_document'),
+    path('match_reviewer/<int:document_id>/', core_views.match_reviewer, name='match_reviewer'),
+    path('get_feedback/<int:document_id>/', core_views.get_feedback, name='get_feedback'),
 
 ]
 if settings.DEBUG:

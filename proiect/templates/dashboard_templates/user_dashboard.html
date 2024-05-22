@@ -21,19 +21,18 @@
     <li>
         {{ document.document.name }}
         <p>Status: {{ document.status }}</p>
+        {% if document.rejected_conference %}
+        <p>Document was rejected from {{ document.rejected_conference }} conference because no matching reviewers were found.</p>
+        {% endif %}
+
+        {% if document.feedback %}
+        <button class="view-feedback-btn" data-document-id="{{ document.id }}">View Feedback</button>
+        {% endif %}
         <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
         <form method="post" action="{% url 'remove_document' document.id %}">
             {% csrf_token %}
             <button type="submit">Remove</button>
         </form>
-        {% if document.status == 'UPLOADED' %}
-        <form method="post" action="{% url 'send_to_review' document.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="workplace" value="{{ document.workplace }}">
-            <input type="hidden" name="topic" value="{{ document.topic }}">
-            <button type="submit">Send to Review</button>
-        </form>
-        {% endif %}
         <form method="post" action="{% url 'spell_check' %}">
             {% csrf_token %}
             <input type="hidden" name="document_id" value="{{ document.id }}">
@@ -54,11 +53,59 @@
             <input type="hidden" name="document_id" value="{{ document.id }}">
             <button type="submit" class="compare-documents-btn">Compare Documents</button>
         </form>
+        {% if document.status == 'UPLOADED' %}
+        <form method="post" id="send-to-review-form-{{ document.id }}" action="{% url 'send_to_review' document.id %}">
+            {% csrf_token %}
+            <button type="button" id="initial-send-button-{{ document.id }}" class="initial-send-button" data-doc-id="{{ document.id }}">Send to Review</button>
+            
+            <div id="review-details-{{ document.id }}" style="display: none;">
+                <label for="conference-{{ document.id }}">Select Conference:</label>
+                <select id="conference-{{ document.id }}" name="conference_name">
+                    {% for conference in conferences %}
+                    <option value="{{ conference.name }}">{{ conference.name }}</option>
+                    {% endfor %}
+                </select><br>
         
+                <label for="keywords-{{ document.id }}">Keywords:</label>
+                <input type="text" id="keywords-{{ document.id }}" name="keywords" value="{{ document.keywords }}"><br>
+        
+                <label for="topic-{{ document.id }}">Topic:</label>
+                <input type="text" id="topic-{{ document.id }}" name="topic" value="{{ document.topic }}"><br>
+        
+                <button type="submit">Submit</button>
+                <button type="button" id="back-button-{{ document.id }}" class="back-button" data-doc-id="{{ document.id }}">Back</button>
+            </div>
+        </form>
+        {% endif %}
+        
+        <div class="feedback-section" id="feedback-section-{{ document.id }}" style="display: none;"> </div>
         <div class="document-preview" style="display: none;"></div>
     </li>
     {% endfor %}
 </ul>
+
+<script>
+    document.querySelectorAll('.view-feedback-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const documentId = this.getAttribute('data-document-id');
+            const feedbackSection = document.getElementById('feedback-section-' + documentId);
+
+            // Toggle display of feedback section
+            if (feedbackSection.style.display === 'none' || feedbackSection.style.display === '') {
+                // Fetch feedback data and display
+                fetch(`/get_feedback/${documentId}/`)
+                    .then(response => response.text())
+                    .then(data => {
+                        feedbackSection.innerHTML = data;
+                        feedbackSection.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error fetching feedback:', error));
+            } else {
+                feedbackSection.style.display = 'none';
+            }
+        });
+    });
+</script>
 
 <script>
     document.querySelectorAll('.preview-btn').forEach(btn => {
@@ -86,6 +133,26 @@
             } else {
                 previewDiv.style.display = 'none';
             }
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.initial-send-button').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const docId = this.dataset.docId;
+                document.getElementById('review-details-' + docId).style.display = 'block';
+                this.style.display = 'none';
+            });
+        });
+
+        document.querySelectorAll('.back-button').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const docId = this.dataset.docId;
+                document.getElementById('review-details-' + docId).style.display = 'none';
+                document.getElementById('initial-send-button-' + docId).style.display = 'block';
+            });
         });
     });
 </script>

@@ -61,8 +61,30 @@
       {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
     </a>
     <div class="document-actions">
+      <button class="return-btn" data-document-id="{{ document.id }}">Return</button>
       <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
     </div>
+    <form method="post" action="{% url 'return_document' document.id %}" class="return-form" style="display: none;" id="return-form-{{ document.id }}">
+      {% csrf_token %}
+      <label for="whats_wrong_{{ document.id }}">What's Wrong:</label>
+      <textarea name="whats_wrong" id="whats_wrong_{{ document.id }}" required></textarea>
+
+      <label for="what_can_be_improved_{{ document.id }}">What Can Be Improved:</label>
+      <textarea name="what_can_be_improved" id="what_can_be_improved_{{ document.id }}" required></textarea>
+
+      <label for="score_{{ document.id }}">Score:</label>
+      <input type="number" name="score" id="score_{{ document.id }}" min="-5" max="5" required>
+
+      <label for="decision_{{ document.id }}">Decision:</label>
+      <select name="decision" id="decision_{{ document.id }}">
+        <option value="reject">Reject</option>
+        <option value="accept_with_small_revisions">Accept with Small Revisions</option>
+        <option value="accept_with_major_revisions">Accept with Major Revisions</option>
+        <option value="accept">Accept</option>
+      </select>
+      
+      <button type="submit">Submit Feedback</button>
+    </form>
     <div class="document-preview" style="display: none;"></div>
   </li>
   {% endfor %}
@@ -96,6 +118,14 @@
           }
       });
   });
+
+  document.querySelectorAll('.return-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const documentId = this.getAttribute('data-document-id');
+        const form = document.getElementById(`return-form-${documentId}`);
+        form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+    });
+});
 </script>
 
 

@@ -20,7 +20,7 @@ class ReviewerSignupForm(UserCreationForm):
 class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = UploadedDocument
-        fields = ['document', 'workplace', 'topic']
+        fields = ['document', 'keywords', 'topic']
 
 
 class ConferenceForm(forms.ModelForm):

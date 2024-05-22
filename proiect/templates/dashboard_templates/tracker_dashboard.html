@@ -9,4 +9,88 @@
 <h1>Tracker Dashboard</h1>
 <p>Welcome to the Tracker Dashboard.</p>
 
+<h2>Documents Assigned to You:</h2>
+<ul>
+  {% for document in documents %}
+  {% if document.status == 'SUBMITTED' %}
+  <li>
+    <strong>Document Name:</strong> {{ document.document.name }}<br>
+    <strong>Uploaded By:</strong> {{ document.uploader }}<br>
+    <strong>Uploader's Workplace:</strong> {{ document.uploader_workplace }}<br>
+    <strong>Uploader's References:</strong> {{ document.uploader_references }}<br>
+    <strong>Status:</strong> {{ document.status }}<br>
+    <strong>Topic:</strong> {{ document.topic }}<br>
+    <strong>Key Words:</strong> {{ document.keywords }}<br>
+    <strong>Submitted for conference:</strong> {{ document.conference.name }}<br><br>
+
+    <form method="post" action="{% url 'match_reviewer' document.id %}">
+      {% csrf_token %}
+      <label for="reviewer">Select Reviewer:</label>
+      <select name="reviewer" id="reviewer">
+        {% for reviewer in reviewers %}
+        <option value="{{ reviewer.id }}">{{ reviewer.username }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Match Reviewer</button>
+    </form>
+
+    <form method="post" action="{% url 'reject_document' document.id %}">
+      {% csrf_token %}
+      <button type="submit">Reject</button>
+    </form> <br>
+
+    <form method="post" action="{% url 'remove_document' document.id %}">
+      {% csrf_token %}
+      <button type="submit">Remove</button>
+    </form>
+  </li>
+  {% endif %}
+  {% empty %}
+  <li>No documents assigned to you.</li>
+  {% endfor %}
+</ul>
+
+<h2>Ongoing Reviews in Tracked Conferences:</h2>
+<ul>
+  {% for document_name, reviews in grouped_ongoing_reviews.items %}
+  <h3>Document Name: {{ document_name }}</h3>
+  <ul>
+      {% for review in reviews %}
+          <li>Reviewer: {{ review.reviewer.username }} - {{ review.reviewer.email }}</li>
+      {% endfor %}
+  </ul>
+
+  {% empty %}
+  <li>No ongoing reviews in tracked conferences.</li>
+  {% endfor %}
+</ul>
+
+<h2>Conferences Where You Are the Tracker:</h2>
+<ul>
+  {% for conference in tracked_conferences %}
+  <li>Currently, you are the tracker of {{ conference.name }} conference.</li>
+  {% empty %}
+  <li>You are not the tracker of any conference.</li>
+  {% endfor %}
+</ul>
+
+<h2>Reviewers Assigned to Conferences You Are Tracking:</h2>
+<ul>
+  {% for reviewer in reviewers %}
+  <li>
+    <strong>Username:</strong> {{ reviewer.username }}<br>
+    <strong>Current Workplace:</strong> {{ reviewer.current_workplace }}<br>
+    <strong>References:</strong> {{ reviewer.references }}<br>
+    <strong>Joined Conferences as reviewer:</strong>
+    <ul>
+      {% for conference in reviewer.joined_conferences.all %}
+      <li>{{ conference.name }}</li>
+      {% endfor %}
+    </ul>
+  </li><br>
+  {% empty %}
+  <li>No reviewers assigned to conferences you are tracking.</li>
+  {% endfor %}
+</ul>
+
 {% endblock %}

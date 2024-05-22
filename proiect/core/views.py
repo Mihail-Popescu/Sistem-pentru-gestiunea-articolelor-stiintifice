@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from proiect.forms import ReviewerSignupForm, DocumentUploadForm , ConferenceForm
-from proiect.models import UploadedDocument, ReviewerRequest, Conference, CustomUser
+from proiect.models import UploadedDocument, ReviewerRequest, Conference, CustomUser, ReviewFeedback
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -61,7 +61,18 @@ nlp = spacy.load("en_core_web_md")
 @login_required
 def user_dash(request):
     documents = UploadedDocument.objects.filter(user=request.user)
-    
+    conferences = Conference.objects.all()  # Fetch all conferences
+
+    # Update documents with rejection info
+    for document in documents:
+        # Find a rejected document with the same name and get the conference
+        rejected_document = UploadedDocument.objects.filter(document=document.document.name, status='REJECTED').first()
+        if rejected_document and rejected_document.conference:
+            document.rejected_conference = rejected_document.conference.name
+        else:
+            document.rejected_conference = None
+
+
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -72,7 +83,27 @@ def user_dash(request):
     else:
         form = DocumentUploadForm()
 
-    return render(request, 'dashboard_templates/user_dashboard.html', {'form': form, 'documents': documents})
+    return render(request, 'dashboard_templates/user_dashboard.html', {
+        'form': form,
+        'documents': documents,
+        'conferences': conferences,  # Pass the conferences to the template
+    })
+
+def get_feedback(request, document_id):
+    # Retrieve feedback associated with the document ID
+    feedback = ReviewFeedback.objects.filter(document_id=document_id)
+
+    # Render feedback as HTML content
+    feedback_html = "<h4>Feedback:</h4>"
+    for entry in feedback:
+        feedback_html += f"<p>Reviewer: {entry.reviewer.username}</p>"
+        feedback_html += f"<p>What's Wrong: {entry.whats_wrong}</p>"
+        feedback_html += f"<p>What Can Be Improved: {entry.what_can_be_improved}</p>"
+        feedback_html += f"<p>Score: {entry.score}</p>"
+        feedback_html += f"<p>Decision: {entry.get_decision_display()}</p>"
+        feedback_html += "<hr>"
+
+    return render(request, 'feedback.html', {'feedback_html': feedback_html})
 
 @login_required
 def remove_document(request, document_id):
@@ -85,27 +116,38 @@ def send_to_review(request, document_id):
     document = get_object_or_404(UploadedDocument, id=document_id, user=request.user)
 
     if request.method == 'POST':
-        workplace = request.POST.get('workplace')
+        conference_name = request.POST.get('conference_name')
+        keywords = request.POST.get('keywords')
         topic = request.POST.get('topic')
 
+        document.keywords = keywords
+        document.topic = topic
         document.status = 'SUBMITTED'
         document.save()
 
-        reviewers = get_user_model().objects.filter(is_reviewer=True).exclude(current_workplace=workplace)
+        conference = get_object_or_404(Conference, name=conference_name)
+        trackers = conference.trackers.filter(is_tracker=True)
 
-        for reviewer in reviewers:
+        for tracker in trackers:
+            # Create new entry for tracker to review the document
             UploadedDocument.objects.create(
-                user=reviewer,
+                user=tracker,
                 document=document.document,
-                workplace=workplace,
+                keywords=keywords,
                 topic=topic,
                 status='SUBMITTED',
-                reviewer=reviewer
+                reviewer=tracker,
+                conference=conference
             )
 
+        messages.success(request, 'Document has been submitted for review.')
         return redirect('user_dash')
 
-    return render(request, 'user_dashboard.html', {'document': document, 'form': DocumentUploadForm()})
+    return render(request, 'dashboard_templates/user_dashboard.html', {
+        'document': document,
+        'form': DocumentUploadForm(),
+    })
+
 
 def preview_document(request, document_id):
     try:
@@ -347,10 +389,133 @@ def choose_document(request, document_id):
     
     return redirect('reviewer_dash')
 
-#tracker
+@login_required
+def return_document(request, document_id):
+    document = get_object_or_404(UploadedDocument, id=document_id, user=request.user, status='UNDER_REVIEW')
+    uploader_document = UploadedDocument.objects.filter(document=document.document.name, reviewer=None).first()
+
+    if request.method == 'POST':
+        whats_wrong = request.POST.get('whats_wrong')
+        what_can_be_improved = request.POST.get('what_can_be_improved')
+        score = request.POST.get('score')
+        decision = request.POST.get('decision')
+
+        feedback = ReviewFeedback.objects.create(
+            document=uploader_document,
+            reviewer=request.user,
+            whats_wrong=whats_wrong,
+            what_can_be_improved=what_can_be_improved,
+            score=score,
+            decision=decision
+        )
+
+        document.status = 'REVIEWED'
+        document.feedback = feedback
+        document.save()
+
+        if UploadedDocument.objects.filter(
+             conference=document.conference,
+             document=document.document.name,
+             status='UNDER_REVIEW',
+             reviewer__isnull=False
+        ).exclude(id=document.id).exists():
+         uploader_document.status = 'UNDER_REVIEW'
+        else:
+         uploader_document.status = 'REVIEWED'
+
+        uploader_document.feedback = feedback
+        uploader_document.save()
+
+        return redirect('reviewer_dash')
+
+    return redirect('reviewer_dash')
+
+
+#tracker    
 @login_required
 def tracker_dash(request):
-    return render(request, 'dashboard_templates/tracker_dashboard.html')
+    # Retrieve documents assigned to the logged-in tracker
+    documents = UploadedDocument.objects.filter(reviewer=request.user)
+
+    for document in documents:
+        # Find the uploader by filtering documents with the same name and null reviewer
+        uploader_document = UploadedDocument.objects.filter(document=document.document.name, reviewer=None).first()
+        if uploader_document:
+            document.uploader = uploader_document.user.username
+            document.uploader_workplace = uploader_document.user.current_workplace
+            document.uploader_references = uploader_document.user.references
+        else:
+            document.uploader = "Unknown"
+            document.uploader_workplace = "Unknown"
+            document.uploader_references = "Unknown"
+
+    # Fetch conferences where the current user appears as a tracker
+    tracked_conferences = Conference.objects.filter(trackers=request.user)
+
+    # Find reviewers assigned to the conferences where the current user is a tracker
+    reviewers = CustomUser.objects.filter(is_reviewer=True, joined_conferences__in=tracked_conferences)
+
+    # Get the reviewers who have picked documents for review in the tracked conferences
+    ongoing_reviews = UploadedDocument.objects.filter(
+        status='UNDER_REVIEW',
+        reviewer__isnull=False,
+        conference__in=tracked_conferences
+    ).distinct()
+
+    # Group ongoing reviews by document name
+    grouped_ongoing_reviews = {}
+    for review in ongoing_reviews:
+        if review.document.name not in grouped_ongoing_reviews:
+            grouped_ongoing_reviews[review.document.name] = []
+        grouped_ongoing_reviews[review.document.name].append(review)
+
+    return render(request, 'dashboard_templates/tracker_dashboard.html', {
+        'documents': documents,
+        'tracked_conferences': tracked_conferences,
+        'reviewers': reviewers,
+        'grouped_ongoing_reviews': grouped_ongoing_reviews,
+    })
+
+
+
+def reject_document(request, document_id):
+    # Find the document to reject
+    document = UploadedDocument.objects.get(pk=document_id)
+    
+    # Change its status to REJECTED
+    document.status = 'REJECTED'
+    document.save()
+    
+    # Find the related document with the same name that doesn't have a reviewer
+    related_document = UploadedDocument.objects.filter(document=document.document.name, reviewer=None).first()
+    if related_document:
+        # Change its status to UPLOADED
+        related_document.status = 'UPLOADED'
+        related_document.save()
+    
+    return redirect('tracker_dash')
+
+@login_required
+def match_reviewer(request, document_id):
+    if request.method == 'POST':
+        document = get_object_or_404(UploadedDocument, id=document_id)
+        reviewer_id = request.POST.get('reviewer')
+
+        # Retrieve the reviewer instance
+        reviewer = get_object_or_404(CustomUser, id=reviewer_id)
+
+        # Create a new entry for the reviewer to review the document
+        UploadedDocument.objects.create(
+            user=reviewer,
+            document=document.document,
+            keywords=document.keywords,
+            topic=document.topic,
+            status='SUBMITTED',
+            reviewer=reviewer,
+            conference=document.conference
+        )
+        
+        return redirect('tracker_dash')
 
 #organizer
 @login_required
@@ -396,6 +561,9 @@ def assign_user_to_conference(request):
                             messages.error(request, f'A user can\'t be both tracker and reviewer for the same conference.')
                         else:
                             conference.trackers.add(user)
+                            if not user.is_tracker:
+                                user.is_tracker = True
+                                user.save()
                             conference.save()
                             messages.success(request, f'{user.username} has been assigned as a tracker for {conference.name}.')
         
@@ -474,6 +642,8 @@ def approve_signup_request(request, request_id):
         username=signup_request.username,
         email=signup_request.email,
         password=signup_request.password,
+        current_workplace=signup_request.current_workplace,
+        references=signup_request.references,
         is_active=True,
         is_reviewer=True
     )
