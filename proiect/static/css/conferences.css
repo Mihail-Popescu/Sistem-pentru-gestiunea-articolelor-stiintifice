@@ -1,0 +1,47 @@
+/* Overall Page Styling */
+body {
+    font-family: Arial, sans-serif; /* Choose a font you like */
+    color: #333; /* Dark text */
+}
+
+/* Conference List Styling */
+ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+/* Individual Conference Box Styling */
+li {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    width: calc(33.33% - 20px); /* 3 per row, adjust as needed */
+    min-width: 250px; /* Minimum width for content */
+}
+
+/* Image Styling */
+li img {
+    width: 100%; /* Make image fill the box width */
+    height: auto;
+    object-fit: cover; /* Crop/resize to fit nicely */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Conference Details Styling */
+li strong {
+    display: block;
+    font-size: 1.2em;
+    margin-top: 10px;
+    color: #000000; /* Blue color for title */
+}
+
+li p {
+    margin-top: 5px;
+}

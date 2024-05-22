@@ -103,7 +103,7 @@ def get_feedback(request, document_id):
         feedback_html += f"<p>Decision: {entry.get_decision_display()}</p>"
         feedback_html += "<hr>"
 
-    return render(request, 'feedback.html', {'feedback_html': feedback_html})
+    return render(request, 'results_templates/feedback.html', {'feedback_html': feedback_html})
 
 @login_required
 def remove_document(request, document_id):
@@ -345,21 +345,21 @@ def reviewer_dash(request):
     reviewing_documents = UploadedDocument.objects.filter(user=reviewer, status='UNDER_REVIEW')
 
     search_query = request.GET.get('search_query')
-    search_workplace = request.GET.get('search_workplace')
+    search_keyword = request.GET.get('search_keyword')
     search_topic = request.GET.get('search_topic')
 
     if search_query:
 
         query_filter = Q()
 
-        if search_workplace and search_topic:
-            query_filter |= Q(workplace__icontains=search_query) | Q(topic__icontains=search_query)
-        elif search_workplace:
-            query_filter |= Q(workplace__icontains=search_query)
+        if search_keyword and search_topic:
+            query_filter |= Q(keywords__icontains=search_query) | Q(topic__icontains=search_query)
+        elif search_keyword:
+            query_filter |= Q(keywords__icontains=search_query)
         elif search_topic:
             query_filter |= Q(topic__icontains=search_query)
         else:
-            query_filter |= Q(workplace__icontains=search_query) | Q(topic__icontains=search_query)
+            query_filter |= Q(keywords__icontains=search_query) | Q(topic__icontains=search_query)
 
         submitted_documents = submitted_documents.filter(query_filter)
 

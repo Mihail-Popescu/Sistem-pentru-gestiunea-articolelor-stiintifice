@@ -6,9 +6,7 @@
   <link rel="stylesheet" type="text/css" href="{% static 'css/conferences.css' %}">
 </head>
 
-<h1>Conferences</h1>
-
-<h2>Ongoing Conferences</h2>
+<center><h2>Ongoing Conferences</h2></center>
 <ul>
   {% for conference in ongoing_conferences %}
   <li>
@@ -16,18 +14,18 @@
     <img src="{{ conference.picture.url }}" alt="{{ conference.name }}" width="200"><br>
     {% endif %}
     <strong>{{ conference.name }}</strong><br>
-    Start Date: {{ conference.start_date }}<br>
-    End Date: {{ conference.end_date }}<br>
-    Location: {{ conference.location }}<br>
-    Description: {{ conference.description }}<br>
-    Organizer: {{ conference.organizer }} <br>
+    <b>Organizer:</b> {{ conference.organizer }} <br>
+    <b>Location:</b> {{ conference.location }}<br><br>
+    <b>Start Date:</b> {{ conference.start_date }}<br>
+    <b>End Date:</b> {{ conference.end_date }}<br><br>
+    <b>Description:</b> {{ conference.description }}<br>
   </li>
   {% empty %}
   <li>No ongoing conferences at the moment.</li>
   {% endfor %}
 </ul>
 
-<h2>Planned Conferences</h2>
+<center><h2>Planned Conferences</h2></center>
 <ul>
   {% for conference in planned_conferences %}
   <li>
@@ -35,11 +33,11 @@
     <img src="{{ conference.picture.url }}" alt="{{ conference.name }}" width="200"><br>
     {% endif %}
     <strong>{{ conference.name }}</strong><br>
-    Start Date: {{ conference.start_date }}<br>
-    End Date: {{ conference.end_date }}<br>
-    Location: {{ conference.location }}<br>
-    Description: {{ conference.description }}<br>
-    Organizer: {{ conference.organizer }} <br>
+    <b>Organizer:</b> {{ conference.organizer }} <br>
+    <b>Location:</b> {{ conference.location }}<br><br>
+    <b>Start Date:</b> {{ conference.start_date }}<br>
+    <b>End Date:</b> {{ conference.end_date }}<br><br>
+    <b>Description:</b> {{ conference.description }}<br>
   </li>
   {% empty %}
   <li>No planned conferences at the moment.</li>

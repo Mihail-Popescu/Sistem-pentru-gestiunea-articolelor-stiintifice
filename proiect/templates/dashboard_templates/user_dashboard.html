@@ -2,97 +2,94 @@
 {% load django_browser_reload %}
 {% load static %}
 {% block content %}
+{% load custom_tags %}
 <head>
     <title>User dash</title>
     <link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}">
 </head>
 
-<h3>Upload Document</h3>
-
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form }}
-    <button type="submit">Upload Document</button>
-</form> 
-
-<h3>Uploaded Documents</h3>
-<ul>
-    {% for document in documents %}
-    <li>
-        {{ document.document.name }}
-        <p>Status: {{ document.status }}</p>
-        {% if document.rejected_conference %}
-        <p>Document was rejected from {{ document.rejected_conference }} conference because no matching reviewers were found.</p>
-        {% endif %}
-
-        {% if document.feedback %}
-        <button class="view-feedback-btn" data-document-id="{{ document.id }}">View Feedback</button>
-        {% endif %}
-        <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
-        <form method="post" action="{% url 'remove_document' document.id %}">
+<div class="dashboard-container">
+    <div class="upload-section">
+        <h3>Upload Document</h3>
+        <form method="post" enctype="multipart/form-data" class="form">
             {% csrf_token %}
-            <button type="submit">Remove</button>
-        </form>
-        <form method="post" action="{% url 'spell_check' %}">
-            {% csrf_token %}
-            <input type="hidden" name="document_id" value="{{ document.id }}">
-            <button type="submit" class="spell-check-btn">Spell Check</button>
-        </form>
-        <form method="post" action="{% url 'ner_extraction' %}">
-            {% csrf_token %}
-            <input type="hidden" name="document_id" value="{{ document.id }}">
-            <button type="submit" class="ner-extraction-btn">Named Entity Recognition</button>
-        </form>
-        <form method="post" action="{% url 'analyze_sentiment' %}">
-            {% csrf_token %}
-            <input type="hidden" name="document_id" value="{{ document.id }}">
-            <button type="submit" class="sentiment-analysis-btn">Sentiment Analysis</button>
-        </form>
-        <form method="post" action="{% url 'compare_documents' %}">
-            {% csrf_token %}
-            <input type="hidden" name="document_id" value="{{ document.id }}">
-            <button type="submit" class="compare-documents-btn">Compare Documents</button>
-        </form>
-        {% if document.status == 'UPLOADED' %}
-        <form method="post" id="send-to-review-form-{{ document.id }}" action="{% url 'send_to_review' document.id %}">
-            {% csrf_token %}
-            <button type="button" id="initial-send-button-{{ document.id }}" class="initial-send-button" data-doc-id="{{ document.id }}">Send to Review</button>
-            
-            <div id="review-details-{{ document.id }}" style="display: none;">
-                <label for="conference-{{ document.id }}">Select Conference:</label>
-                <select id="conference-{{ document.id }}" name="conference_name">
-                    {% for conference in conferences %}
-                    <option value="{{ conference.name }}">{{ conference.name }}</option>
-                    {% endfor %}
-                </select><br>
-        
-                <label for="keywords-{{ document.id }}">Keywords:</label>
-                <input type="text" id="keywords-{{ document.id }}" name="keywords" value="{{ document.keywords }}"><br>
-        
-                <label for="topic-{{ document.id }}">Topic:</label>
-                <input type="text" id="topic-{{ document.id }}" name="topic" value="{{ document.topic }}"><br>
-        
-                <button type="submit">Submit</button>
-                <button type="button" id="back-button-{{ document.id }}" class="back-button" data-doc-id="{{ document.id }}">Back</button>
-            </div>
-        </form>
-        {% endif %}
-        
-        <div class="feedback-section" id="feedback-section-{{ document.id }}" style="display: none;"> </div>
-        <div class="document-preview" style="display: none;"></div>
-    </li>
-    {% endfor %}
-</ul>
+            {{ form }}
+            <button type="submit" class="formbutton">Upload Document</button>
+        </form> 
+    </div>
+    <div class="document-section">
+        <h3>Uploaded Documents</h3>
+        <ul>
+            {% for document in documents %}
+            <li>
+                <h3>{{ document.document.name|basename }}</h3>
+                <p><strong>{{ document.get_status_display }}</strong></p>
+                {% if document.rejected_conference %}
+                <p>Document was rejected from {{ document.rejected_conference }} conference because no matching reviewers were found.</p>
+                {% endif %}
+                {% if document.feedback %}
+                <button class="document-btn document-preview-btn view-feedback-btn" data-document-id="{{ document.id }}">View Feedback</button>
+                {% endif %}
+                <button class="document-btn document-preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
+                <form method="post" action="{% url 'remove_document' document.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="document-btn">Remove</button>
+                </form>
+                <form method="post" action="{% url 'spell_check' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_id" value="{{ document.id }}">
+                    <button type="submit" class="document-btn">Spell Check</button>
+                </form>
+                <form method="post" action="{% url 'ner_extraction' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_id" value="{{ document.id }}">
+                    <button type="submit" class="document-btn">Named Entity Recognition</button>
+                </form>
+                <form method="post" action="{% url 'analyze_sentiment' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_id" value="{{ document.id }}">
+                    <button type="submit" class="document-btn">Sentiment Analysis</button>
+                </form>
+                <form method="post" action="{% url 'compare_documents' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="document_id" value="{{ document.id }}">
+                    <button type="submit" class="document-btn">Compare Documents</button>
+                </form>
+                {% if document.status == 'UPLOADED' %}
+                <form method="post" id="send-to-review-form-{{ document.id }}" action="{% url 'send_to_review' document.id %}">
+                    {% csrf_token %}
+                    <button type="button" id="initial-send-button-{{ document.id }}" class="document-btn initial-send-button" data-doc-id="{{ document.id }}">Send to Review</button>
+                    <div id="review-details-{{ document.id }}" style="display: none;">
+                        <label for="conference-{{ document.id }}">Select Conference:</label>
+                        <select id="conference-{{ document.id }}" name="conference_name">
+                            {% for conference in conferences %}
+                            <option value="{{ conference.name }}">{{ conference.name }}</option>
+                            {% endfor %}
+                        </select><br>
+                        <label for="keywords-{{ document.id }}">Keywords:</label>
+                        <input type="text" id="keywords-{{ document.id }}" name="keywords" value="{{ document.keywords }}"><br>
+                        <label for="topic-{{ document.id }}">Topic:</label>
+                        <input type="text" id="topic-{{ document.id }}" name="topic" value="{{ document.topic }}"><br>
+                        <button type="submit" class="document-btn">Submit</button>
+                        <button type="button" id="back-button-{{ document.id }}" class="document-btn back-button" data-doc-id="{{ document.id }}">Back</button>
+                    </div>
+                </form>
+                {% endif %}
+                <div class="feedback-section" id="feedback-section-{{ document.id }}" style="display: none;"></div>
+                <div class="document-preview" style="display: none;"></div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 
 <script>
-    document.querySelectorAll('.view-feedback-btn').forEach(btn => {
+        document.querySelectorAll('.view-feedback-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const documentId = this.getAttribute('data-document-id');
             const feedbackSection = document.getElementById('feedback-section-' + documentId);
 
-            // Toggle display of feedback section
             if (feedbackSection.style.display === 'none' || feedbackSection.style.display === '') {
-                // Fetch feedback data and display
                 fetch(`/get_feedback/${documentId}/`)
                     .then(response => response.text())
                     .then(data => {
@@ -105,10 +102,8 @@
             }
         });
     });
-</script>
 
-<script>
-    document.querySelectorAll('.preview-btn').forEach(btn => {
+    document.querySelectorAll('.document-preview-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const documentId = this.getAttribute('data-document-id');
             const documentUrl = this.getAttribute('data-document-url');
@@ -135,9 +130,7 @@
             }
         });
     });
-</script>
 
-<script>
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.initial-send-button').forEach(function(button) {
             button.addEventListener('click', function() {

@@ -1,132 +1,137 @@
 {% extends 'main_templates/base.html' %}
 {% load static %}
 {% block content %}
+{% load custom_tags %}
 <head>
-  <title>Reviewer dash</title>
-  <link rel="stylesheet" href="{% static 'css/reviewer_dashboard.css' %}">
+    <title>Reviewer dash</title>
+    <link rel="stylesheet" href="{% static 'css/reviewer_dashboard.css' %}">
 </head>
 
-<h3>Submitted Documents</h3>
+<div class="dashboard-container">
+    <div class="document-section">
+        <h3>Documents submitted for review</h3>
+        <form method="get" action="{% url 'reviewer_dash' %}" class="search-form">
+            <div class="search-bar">
+                <input type="text" name="search_query" placeholder="Search...">
+                <button type="submit">Search</button>
+            </div>
+            <div class="checkboxes">
+                <label>
+                    <input type="checkbox" name="search_keyword" value="keyword"> Search by keyword
+                </label>
+                <label>
+                    <input type="checkbox" name="search_topic" value="topic"> Search by topic
+                </label>
+            </div>
+            {% if search_query %}
+            <a href="{% url 'reviewer_dash' %}" class="clear-search">Clear Search</a>
+            {% endif %}
+        </form>
 
-<form method="get" action="{% url 'reviewer_dash' %}" class="search-form">
-  <div class="search-bar">
-    <input type="text" name="search_query" placeholder="Search...">
-    <button type="submit">Search</button>
-  </div>
-  <div class="checkboxes">
-    <label>
-      <input type="checkbox" name="search_workplace" value="workplace"> Search in Workplace
-    </label>
-    <label>
-      <input type="checkbox" name="search_topic" value="topic"> Search in Topic
-    </label>
-  </div>
-  {% if search_query %}
-  <a href="{% url 'reviewer_dash' %}" class="clear-search">Clear Search</a>
-  {% endif %}
-</form>
-
-{% if no_document_message %}
-<p>{{ no_document_message }}</p>
-{% else %}
-<ul class="document-list">
-  {% for document in submitted_documents %}
-  <li>
-    <a href="{{ document.document.url }}" download="{{ document.document.name }}">
-      {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
-    </a>
-    <div class="document-actions">
-      <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
-      <form method="post" action="{% url 'remove_document' document.id %}">
-        {% csrf_token %}
-        <button type="submit">Remove</button>
-      </form>
-      <form method="post" action="{% url 'choose_document' document.id %}">
-        {% csrf_token %}
-        <button type="submit">Choose</button>
-      </form>
+        {% if no_document_message %}
+            <p>{{ no_document_message }}</p>
+        {% else %}
+            <ul class="document-list">
+                {% for document in submitted_documents %}
+                <li>
+                    <h3><center>{{ document.document.name|basename }}</center></h3>
+                    <p><strong>Topic:</strong> {{ document.topic }} <br> <strong>Keywords:</strong> {{ document.keywords }}</p>
+                    <div class="document-actions">
+                        <form method="post" action="{% url 'choose_document' document.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="document-btn">Accept</button>
+                        </form>
+                        <form method="post" action="{% url 'remove_document' document.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="document-btn">Remove</button>
+                        </form>
+                        <button class="document-btn preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
+                    </div>
+                    <div class="document-preview" style="display: none;"></div>
+                </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
-    <div class="document-preview" style="display: none;"></div>
-  </li>
-  {% endfor %}
-</ul>
-{% endif %}
 
-<h3>Currently Reviewing</h3>
+    <div class="document-section">
+        <h3>Currently reviewing documents</h3>
+        <ul class="document-list">
+            {% for document in reviewing_documents %}
+            <li>
+              <h3><center>{{ document.document.name|basename }}</center></h3>
+              <p><strong>Topic:</strong> {{ document.topic }} <br> <strong>Keywords:</strong> {{ document.keywords }}</p>
+                <div class="document-actions">
+                    <button class="document-btn return-btn" data-document-id="{{ document.id }}">Return Feedback</button>
+                    <form method="get" action="{{ document.document.url }}" style="display: inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="document-btn" download>Download</button>
+                  </form>
+                  <button class="document-btn preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button> 
+                </div>
+                <form method="post" action="{% url 'return_document' document.id %}" class="return-form" style="display: none;" id="return-form-{{ document.id }}">
+                    {% csrf_token %}
+                    <label for="whats_wrong_{{ document.id }}">What's Wrong:</label>
+                    <textarea name="whats_wrong" id="whats_wrong_{{ document.id }}" required></textarea>
 
-<ul class="document-list">
-  {% for document in reviewing_documents %}
-  <li>
-    <a href="{{ document.document.url }}" download="{{ document.document.name }}">
-      {{ document.document.name }} - {{ document.workplace }} - {{ document.topic }}
-    </a>
-    <div class="document-actions">
-      <button class="return-btn" data-document-id="{{ document.id }}">Return</button>
-      <button class="preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
-    </div>
-    <form method="post" action="{% url 'return_document' document.id %}" class="return-form" style="display: none;" id="return-form-{{ document.id }}">
-      {% csrf_token %}
-      <label for="whats_wrong_{{ document.id }}">What's Wrong:</label>
-      <textarea name="whats_wrong" id="whats_wrong_{{ document.id }}" required></textarea>
+                    <label for="what_can_be_improved_{{ document.id }}">What Can Be Improved:</label>
+                    <textarea name="what_can_be_improved" id="what_can_be_improved_{{ document.id }}" required></textarea>
 
-      <label for="what_can_be_improved_{{ document.id }}">What Can Be Improved:</label>
-      <textarea name="what_can_be_improved" id="what_can_be_improved_{{ document.id }}" required></textarea>
+                    <label for="score_{{ document.id }}">Score:</label>
+                    <input type="number" name="score" id="score_{{ document.id }}" min="-5" max="5" required>
 
-      <label for="score_{{ document.id }}">Score:</label>
-      <input type="number" name="score" id="score_{{ document.id }}" min="-5" max="5" required>
-
-      <label for="decision_{{ document.id }}">Decision:</label>
-      <select name="decision" id="decision_{{ document.id }}">
-        <option value="reject">Reject</option>
-        <option value="accept_with_small_revisions">Accept with Small Revisions</option>
-        <option value="accept_with_major_revisions">Accept with Major Revisions</option>
-        <option value="accept">Accept</option>
-      </select>
-      
-      <button type="submit">Submit Feedback</button>
-    </form>
-    <div class="document-preview" style="display: none;"></div>
-  </li>
-  {% endfor %}
-</ul>
-
+                    <label for="decision_{{ document.id }}">Decision:</label>
+                    <select name="decision" id="decision_{{ document.id }}">
+                        <option value="reject">Reject</option>
+                        <option value="accept_with_small_revisions">Accept with Small Revisions</option>
+                        <option value="accept_with_major_revisions">Accept with Major Revisions</option>
+                        <option value="accept">Accept</option>
+                    </select>
+                    
+                    <button type="submit">Submit Feedback</button>
+                </form>
+                <div class="document-preview" style="display: none;"></div> 
+            </li>
+            {% endfor %}
+        </ul>
+    </div>  
+</div>
 <script>
   document.querySelectorAll('.preview-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-          const documentId = this.getAttribute('data-document-id');
-          const documentUrl = this.getAttribute('data-document-url');
-          const previewDiv = this.parentElement.nextElementSibling;
-
-          if (previewDiv.style.display === 'none' || previewDiv.style.display === '') {
-              if (documentUrl.endsWith('.pdf')) {
-                  previewDiv.innerHTML = `<iframe src="${documentUrl}" width="100%" height="500px" frameborder="0"></iframe>`;
-                  previewDiv.style.display = 'block';
-              } else if (documentUrl.endsWith('.docx')) {
-                  fetch(`/preview_document/${documentId}/`)
-                      .then(response => response.text())
-                      .then(data => {
-                          previewDiv.innerHTML = `<pre>${data}</pre>`;
-                          previewDiv.style.display = 'block';
-                      })
-                      .catch(error => console.error('Error fetching document:', error));
+          btn.addEventListener('click', function() {
+              const documentId = this.getAttribute('data-document-id');
+              const documentUrl = this.getAttribute('data-document-url');
+              const previewDiv = this.parentElement.nextElementSibling;
+  
+              if (previewDiv.style.display === 'none' || previewDiv.style.display === '') {
+                  if (documentUrl.endsWith('.pdf')) {
+                      previewDiv.innerHTML = `<iframe src="${documentUrl}" width="100%" height="500px" frameborder="0"></iframe>`;
+                      previewDiv.style.display = 'block';
+                  } else if (documentUrl.endsWith('.docx')) {
+                      fetch(`/preview_document/${documentId}/`)
+                          .then(response => response.text())
+                          .then(data => {
+                              previewDiv.innerHTML = `<pre>${data}</pre>`;
+                              previewDiv.style.display = 'block';
+                          })
+                          .catch(error => console.error('Error fetching document:', error));
+                  } else {
+                      previewDiv.innerHTML = 'Unsupported file format';
+                      previewDiv.style.display = 'block';
+                  }
               } else {
-                  previewDiv.innerHTML = 'Unsupported file format';
-                  previewDiv.style.display = 'block';
+                  previewDiv.style.display = 'none';
               }
-          } else {
-              previewDiv.style.display = 'none';
-          }
+          });
       });
-  });
-
-  document.querySelectorAll('.return-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const documentId = this.getAttribute('data-document-id');
-        const form = document.getElementById(`return-form-${documentId}`);
-        form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
-    });
-});
-</script>
-
+  
+      document.querySelectorAll('.return-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+              const documentId = this.getAttribute('data-document-id');
+              const form = document.getElementById(`return-form-${documentId}`);
+              form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+          });
+      });
+  </script>
 
 {% endblock %}
