@@ -1,12 +1,10 @@
-{% extends 'main_templates/base.html' %}
 {% block content %}
-    <h1>Similar Documents</h1>
+    <h2>Similarity scores determined by the LSI NLP model:</h2>
     <ul>
         {% for document, similarity_score in similar_documents %}
             <li>
-                <p>{{ document.document.name }}</p>
+                <h3>Document on {{ forloop.counter }}{% if forloop.counter == 1 %}st{% elif forloop.counter == 2 %}nd{% elif forloop.counter == 3 %}rd{% else %}th{% endif %} place</h3> 
                 <p>Similarity Score: {{ similarity_score }}</p>
-                
             </li>
         {% endfor %}
     </ul>

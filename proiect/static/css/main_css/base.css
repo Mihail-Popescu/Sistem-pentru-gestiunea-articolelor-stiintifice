@@ -44,37 +44,30 @@ body {
   margin-right: 20px;
 }
 
-
-.login-button {
+.nav-button {
   text-decoration: none;
   color: #fff;
-  padding: 15px 20px;
+  padding: 10px 20px;
   border-radius: 5px;
-  background-color: #0099ff;
-  line-height: 0.1;
+  background-color: #005b99;
+  margin-left: 10px;
   transition: background-color 0.3s ease;
-  align-items: center;
   display: inline-flex;
+  align-items: center;
 }
 
-.login-button:first-child {
-  margin-right: 10px;
+.nav-button:first-child {
+  margin-left: 0;
 }
 
-.login-button:nth-child(2) {
+.nav-button:hover {
+  background-color: #004080;
+}
+
+.welcome-message {
   margin-left: 10px;
-}
-
-.login-button:nth-child(3) {
-  margin-left: 10px;
-}
-
-.login-button:nth-child(4) {
-  margin-left: 10px;
-}
-
-.login-button:hover {
-  background-color: #0077cc;
+  color: #cce6ff;
+  font-weight: bold;
 }
 
 .product-list {

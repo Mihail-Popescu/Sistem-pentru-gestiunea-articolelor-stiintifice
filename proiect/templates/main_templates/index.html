@@ -8,40 +8,65 @@
 
 <head>
     <title>ReviewHub</title>
-    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main_css/index.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
 </head>
 
 <body>
-    <div class="App">
-        <div class="slider">
-            <div class="slides">
-                <div class="slide"><video src="{% static 'videos/reclama-animoto.mp4' %}" alt="Slide 1" autoplay muted
-                        loop></video></div>
-                <div class="slide"><video src="{% static 'videos/book.mp4' %}" alt="Slide 2" autoplay muted
-                        loop></video></div>
-                <div class="slide"><img src="{% static 'images/image2.jpg' %}" alt="Slide 3"></div>
+    <div class="hero-section">
+        <div class="hero-text">
+            <h1>Welcome to ReviewHub</h1>
+            <p>Connecting researchers with qualified reviewers.</p>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'signup' %}" class="cta-button">Get Started</a>
+            {% endif %}
+        </div>
+    </div>
 
-                <div class="slide"><img src="{% static 'images/image4.jpg' %}" alt="Slide 4" class="blur"></div>
-                <div class="slide"><img src="{% static 'images/image5.jpg' %}" alt="Slide 5" class="blur"></div>
-            </div>
-            <div class="dots-container">
-                <span class="dot" onclick="currentSlide(1)"></span>
-                <span class="dot" onclick="currentSlide(2)"></span>
-                <span class="dot" onclick="currentSlide(3)"></span>
-                <span class="dot" onclick="currentSlide(4)"></span>
-                <span class="dot" onclick="currentSlide(5)"></span>
+    <div class="content-wrapper">
+        <div class="slider-wrapper">
+            <div class="slider">
+                <div class="slides">
+                    <div class="slide"><video src="{% static 'videos/reclama-animoto.mp4' %}" alt="Slide 1" autoplay muted loop></video></div>
+                    <div class="slide"><video src="{% static 'videos/book.mp4' %}" alt="Slide 2" autoplay muted loop></video></div>
+                    <div class="slide"><img src="{% static 'images/image2.jpg' %}" alt="Slide 3"></div>
+                    <div class="slide"><img src="{% static 'images/image4.jpg' %}" alt="Slide 4" class="blur"></div>
+                    <div class="slide"><img src="{% static 'images/image5.jpg' %}" alt="Slide 5" class="blur"></div>
+                </div>
+                <div class="dots-container">
+                    <span class="dot" onclick="currentSlide(1)"></span>
+                    <span class="dot" onclick="currentSlide(2)"></span>
+                    <span class="dot" onclick="currentSlide(3)"></span>
+                    <span class="dot" onclick="currentSlide(4)"></span>
+                    <span class="dot" onclick="currentSlide(5)"></span>
+                </div>
             </div>
         </div>
-
-
-        <p class="main-text">Connecting researchers with qualified reviewers.</p>
 
         <div class="geolocation-section">
-            There are currently {{ country_reviewer_count }} reviewers <br> in <span
-                class="flag-icon flag-icon-{{ country|lower }}"></span>{{ country }} available for you.
+            There are currently {{ country_reviewer_count }} reviewers in <span class="flag-icon flag-icon-{{ country|lower }}"></span> {{ country }} available for you.
         </div>
+    </div>
 
+    <div class="features-section">
+        <h2>Why Choose ReviewHub?</h2>
+        <div class="features">
+            <div class="feature">
+                <img src="{% static 'images/image2.jpg' %}" alt="Feature 1">
+                <h3>Quality Reviews</h3>
+                <p>Access to high-quality reviews from experienced professionals.</p>
+            </div>
+            <div class="feature">
+                <img src="{% static 'images/image2.jpg' %}" alt="Feature 2">
+                <h3>Global Reach</h3>
+                <p>Connect with reviewers from around the world.</p>
+            </div>
+            <div class="feature">
+                <img src="{% static 'images/image2.jpg' %}" alt="Feature 3">
+                <h3>Easy to Use</h3>
+                <p>Simple and intuitive platform for seamless collaboration.</p>
+            </div>
+        </div>
     </div>
 </body>
 

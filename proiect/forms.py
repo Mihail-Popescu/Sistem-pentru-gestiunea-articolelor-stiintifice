@@ -14,7 +14,7 @@ class ReviewerSignupForm(UserCreationForm):
         model = CustomUser
         fields = ['username', 'email', 'password1', 'password2', 'current_workplace', 'references']
 
-    is_reviewer = forms.BooleanField(label='Become a Reviewer', required=False)
+   
 
 
 class DocumentUploadForm(forms.ModelForm):

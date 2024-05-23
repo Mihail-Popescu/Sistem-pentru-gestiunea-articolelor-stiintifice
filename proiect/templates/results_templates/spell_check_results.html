@@ -1,14 +1,22 @@
 {% extends 'main_templates/base.html' %}
+{% load static %}
 {% block content %}
-<div style="background-color: white; padding: 20px; border: 1px solid black; border-radius: 5px;">
-    <p>
-        {% for word in text.split %}
-            {% if word in mistakes %}
-                <span style="background-color: yellow;">{{ word }}</span>
-            {% else %}
-                {{ word }}
-            {% endif %}
-        {% endfor %}
-    </p>
+<head>
+    <title>Spelling Results</title>
+    <link rel="stylesheet" href="{% static 'css/results_css/spell_check_results.css' %}">
+</head>
+<a href="{% url 'user_dash' %}" class="back-button">Back to Dashboard</a>
+<div class="spell-check-results-container">
+    <div class="spell-check-results">
+        <p>
+            {% for word in text.split %}
+                {% if word in mistakes %}
+                    <span class="mistake">{{ word }}</span>
+                {% else %}
+                    {{ word }}
+                {% endif %}
+            {% endfor %}
+        </p>
+    </div>
 </div>
 {% endblock %}

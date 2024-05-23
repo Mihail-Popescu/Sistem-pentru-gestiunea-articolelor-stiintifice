@@ -1,4 +1,3 @@
-/* Overall Page Styling */
 body {
     font-family: Arial, sans-serif; 
     color: #333; 
@@ -6,32 +5,28 @@ body {
 
 .dashboard-container{
     display: grid;
-    grid-template-columns: 3fr 3fr; /* Adjust column proportions as needed */
+    grid-template-columns: 3fr 3fr;
     gap: 20px;
     margin: 50px auto;
     max-width: 1500px; 
     padding: 0 20px; 
 }
 
-/* Document Section Styling */
 .document-section {
-    background-color: white;          
-    border: 1px solid #ddd;            
+    background-color: #f0f8ff;                      
     padding: 20px;
     margin: 10px auto;                 
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     width: 80%;
-    max-width: 1500px;                       /* Limit maximum width for readability */
+    max-width: 1500px;
     text-align: center;                
 }
 
 .document-section h3 {
     margin-top: 0;                   
-    color: #000000;                   /* Blue title color */
+    color: #4682b4;
 }
 
-/* Document List Styling */
 ul.document-list {
     list-style-type: none;
     padding: 0;
@@ -39,46 +34,37 @@ ul.document-list {
 }
 
 ul.document-list li {
-    width: 90%; /* Make boxes slightly smaller */
-    margin: 10px auto; /* Reduced margin between boxes */
-    padding: 15px;    /* Reduced padding */
+    width: 90%;
+    margin: 10px auto;
+    padding: 15px;
     background-color: #ffffff;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: left; /* Align text to the left */
+    text-align: left;
 }
 
-/* Document Actions Styling */
 .document-actions {
     display: flex;            
     justify-content: center; 
     margin-top: 10px; 
 }
 
-/* Document Button Styling */
 .document-btn {
     display: inline-block;
     background-color: #0077cc;
     color: white;
     border: none;
-    padding: 8px 16px;   /* Adjusted padding */
+    padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    margin: 0 5px;       /* Equal margins on all sides */
+    margin: 0 5px;
 }
 
 .document-btn:hover {
-    background-color: #36648b; /* Darker blue on hover */
+    background-color: #36648b;
 }
 
-.preview-btn {
-    /* Same styling as .document-btn */
-}
-
-
-
-/* Search Form Styling */
 .search-form {
     margin-bottom: 20px; 
     text-align: left;
@@ -86,8 +72,8 @@ ul.document-list li {
 
 .search-bar {
     display: flex;
-    align-items: center;   /* Vertically align items */
-    gap: 10px;             /* Add space between input and button */ 
+    align-items: center;
+    gap: 10px;
     margin-bottom: 10px;
 }
 
@@ -95,7 +81,7 @@ ul.document-list li {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
-    font-size: 16px;         /* Allow the input to grow and take available space */
+    font-size: 16px;
 }
 
 .checkboxes {
@@ -106,7 +92,6 @@ ul.document-list li {
     margin-right: 10px;
 }
 
-/*Form button styling*/
 form button { 
     background-color: #4682b4;
     color: white;
@@ -124,11 +109,11 @@ form button:hover {
 
 .return-form {
     text-align: left;
-    width: 90%; /* Match document box width */
+    width: 90%;
     margin: 20px auto;
 }
 .return-form label {
-    display: block;     /* Labels above their inputs */
+    display: block;
     margin-bottom: 5px;
     font-weight: bold;
 }
@@ -136,11 +121,11 @@ form button:hover {
 .return-form textarea,
 .return-form input,
 .return-form select {
-    width: calc(100% - 22px); /* Full width with padding adjustment */
+    width: calc(100% - 22px);
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 16px;
-    box-sizing: border-box; /* Include padding in width calculation */
+    box-sizing: border-box;
 }

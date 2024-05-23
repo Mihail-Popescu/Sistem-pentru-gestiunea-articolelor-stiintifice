@@ -1,34 +1,38 @@
 {% extends 'main_templates/base.html' %}
+{% load static %}
 {% block content %}
 <head>
     <title>Named Entity Recognition Results</title>
-    <style>
-        #wordcloud-img {
-            width: 800px;
-            height: auto;
-            margin: 20px auto;
-            border: 1px solid #ccc;
-        }
-        .entity-list {
-            margin-top: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/results_css/ner_results.css' %}">
 </head>
 
-<h3>Named Entity Recognition Results</h3>
-
-<p><strong>Document Text:</strong></p>
-<div>{{ text }}</div>
-
-<img id="wordcloud-img" src="data:image/png;base64,{{ word_cloud_img }}" alt="Word Cloud">
-
-<div class="entity-list">
-    <p><strong>Named Entities:</strong></p>
-    <ul>
-        {% for entity, label in entities %}
-            <li>{{ entity }} ({{ label }})</li>
-        {% endfor %}
-    </ul>
+<div class="ner-container">
+    <div class="entity-list">
+        <h3>Suggested keywords identified by the 'en_core_web_sm' NLP model:</h3>
+        <div class="entities">
+            {% for category_label, category_name in category_labels %}
+                {% if category_label in present_labels %}
+                    <div class="entity-category">
+                        <div class="category-container">
+                            <h4>{{ category_name }}</h4>
+                            <ul>
+                                {% for entity, label in entities %}
+                                    {% if label == category_label %}
+                                        <li>{{ entity }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="wordcloud-container">
+        <h3>Word Cloud</h3>
+        <img id="wordcloud-img" src="data:image/png;base64,{{ word_cloud_img }}" alt="Word Cloud">
+    </div>
+    <a href="{% url 'user_dash' %}" class="back-button">Back to Dashboard</a>
 </div>
 
 {% endblock %}

@@ -1,3 +1,19 @@
+ul li .document-btn.blue-btn {
+    background-color: #0077cc !important;
+}
+
+ul li .document-btn.green-btn {
+    background-color: #28a745 !important;
+}
+
+ul li .document-btn.yellow-btn {
+    background-color: #ecb100 !important;
+}
+
+ul li .document-btn.red-btn {
+    background-color: #dc3545 !important;
+}
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f8ff;
@@ -102,7 +118,6 @@ li form {
 
 ul li .document-btn {
     display: inline-block;
-    background-color: #0077cc;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -113,5 +128,12 @@ ul li .document-btn {
 }
 
 ul li .document-btn:hover {
-    background-color: #36648b;
+    filter: brightness(85%);
+}
+
+.docx-text {
+    font-size: 16px;
+    text-align: left;
+    border: 1px solid #ccc;
+    padding: 15px;
 }

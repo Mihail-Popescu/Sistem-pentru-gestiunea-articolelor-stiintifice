@@ -61,11 +61,9 @@ nlp = spacy.load("en_core_web_md")
 @login_required
 def user_dash(request):
     documents = UploadedDocument.objects.filter(user=request.user)
-    conferences = Conference.objects.all()  # Fetch all conferences
+    conferences = Conference.objects.all()
 
-    # Update documents with rejection info
     for document in documents:
-        # Find a rejected document with the same name and get the conference
         rejected_document = UploadedDocument.objects.filter(document=document.document.name, status='REJECTED').first()
         if rejected_document and rejected_document.conference:
             document.rejected_conference = rejected_document.conference.name
@@ -86,21 +84,18 @@ def user_dash(request):
     return render(request, 'dashboard_templates/user_dashboard.html', {
         'form': form,
         'documents': documents,
-        'conferences': conferences,  # Pass the conferences to the template
+        'conferences': conferences,
     })
 
 def get_feedback(request, document_id):
-    # Retrieve feedback associated with the document ID
     feedback = ReviewFeedback.objects.filter(document_id=document_id)
 
-    # Render feedback as HTML content
-    feedback_html = "<h4>Feedback:</h4>"
+    feedback_html = ""
     for entry in feedback:
-        feedback_html += f"<p>Reviewer: {entry.reviewer.username}</p>"
-        feedback_html += f"<p>What's Wrong: {entry.whats_wrong}</p>"
-        feedback_html += f"<p>What Can Be Improved: {entry.what_can_be_improved}</p>"
-        feedback_html += f"<p>Score: {entry.score}</p>"
-        feedback_html += f"<p>Decision: {entry.get_decision_display()}</p>"
+        feedback_html += f"<p><b>What's Wrong:</b> <br> {entry.whats_wrong}</p>"
+        feedback_html += f"<p><b>What Can Be Improved:</b> <br> {entry.what_can_be_improved}</p>"
+        feedback_html += f"<p><b>Score:</b> {entry.score}</p>"
+        feedback_html += f"<p><b>Decision:</b> {entry.get_decision_display()}</p>"
         feedback_html += "<hr>"
 
     return render(request, 'results_templates/feedback.html', {'feedback_html': feedback_html})
@@ -129,7 +124,6 @@ def send_to_review(request, document_id):
         trackers = conference.trackers.filter(is_tracker=True)
 
         for tracker in trackers:
-            # Create new entry for tracker to review the document
             UploadedDocument.objects.create(
                 user=tracker,
                 document=document.document,
@@ -222,9 +216,29 @@ def ner_view(request):
 
             entities = ner_extraction(text)
 
+            present_labels = set(entity[1] for entity in entities)
+
             word_cloud_img = generate_word_cloud(entities)
 
-            return render(request, 'results_templates/ner_results.html', {'text': text, 'word_cloud_img': word_cloud_img, 'entities': entities})
+            category_labels = [
+                ('ORG', 'Organizations'),
+                ('PERSON', 'Persons'),
+                ('NORP', 'Nationalities, Religious, Political Groups'),
+                ('GPE', 'Countries, Cities, States'),
+                ('LOC', 'Locations'),
+                ('PRODUCT', 'Products'),
+                ('EVENT', 'Events'),
+                ('WORK_OF_ART', 'Artworks'),
+                ('LAW', 'Laws'),
+                ('LANGUAGE', 'Languages')
+            ]
+
+            return render(request, 'results_templates/ner_results.html', {
+                'word_cloud_img': word_cloud_img,
+                'entities': entities,
+                'present_labels': present_labels,
+                'category_labels': category_labels
+            })
         except UploadedDocument.DoesNotExist:
             return render(request, 'error.html', {'message': 'Document not found'})
 
@@ -278,13 +292,13 @@ def analyze_sentiment_view(request):
             elif file_path.endswith('.docx'):
                 text = extract_text_from_docx(file_path)
             else:
-                return render(request, 'error.html', {'message': 'Unsupported file format'})
+                return JsonResponse({'error': 'Unsupported file format'}, status=400)
 
             sentiment = analyze_sentiment_bert(text)
 
-            return render(request, 'results_templates/sentiment_results.html', {'text': text, 'sentiment': sentiment})
+            return JsonResponse({'sentiment': sentiment})
         except UploadedDocument.DoesNotExist:
-            return render(request, 'error.html', {'message': 'Document not found'})
+            return JsonResponse({'error': 'Document not found'}, status=404)
 
 def compare_documents(selected_document_id):
     try:
@@ -434,11 +448,9 @@ def return_document(request, document_id):
 #tracker    
 @login_required
 def tracker_dash(request):
-    # Retrieve documents assigned to the logged-in tracker
     documents = UploadedDocument.objects.filter(reviewer=request.user)
 
     for document in documents:
-        # Find the uploader by filtering documents with the same name and null reviewer
         uploader_document = UploadedDocument.objects.filter(document=document.document.name, reviewer=None).first()
         if uploader_document:
             document.uploader = uploader_document.user.username
@@ -449,20 +461,16 @@ def tracker_dash(request):
             document.uploader_workplace = "Unknown"
             document.uploader_references = "Unknown"
 
-    # Fetch conferences where the current user appears as a tracker
     tracked_conferences = Conference.objects.filter(trackers=request.user)
 
-    # Find reviewers assigned to the conferences where the current user is a tracker
     reviewers = CustomUser.objects.filter(is_reviewer=True, joined_conferences__in=tracked_conferences)
 
-    # Get the reviewers who have picked documents for review in the tracked conferences
     ongoing_reviews = UploadedDocument.objects.filter(
         status='UNDER_REVIEW',
         reviewer__isnull=False,
         conference__in=tracked_conferences
     ).distinct()
 
-    # Group ongoing reviews by document name
     grouped_ongoing_reviews = {}
     for review in ongoing_reviews:
         if review.document.name not in grouped_ongoing_reviews:
@@ -479,17 +487,13 @@ def tracker_dash(request):
 
 
 def reject_document(request, document_id):
-    # Find the document to reject
     document = UploadedDocument.objects.get(pk=document_id)
     
-    # Change its status to REJECTED
     document.status = 'REJECTED'
     document.save()
     
-    # Find the related document with the same name that doesn't have a reviewer
     related_document = UploadedDocument.objects.filter(document=document.document.name, reviewer=None).first()
     if related_document:
-        # Change its status to UPLOADED
         related_document.status = 'UPLOADED'
         related_document.save()
     
@@ -501,10 +505,8 @@ def match_reviewer(request, document_id):
         document = get_object_or_404(UploadedDocument, id=document_id)
         reviewer_id = request.POST.get('reviewer')
 
-        # Retrieve the reviewer instance
         reviewer = get_object_or_404(CustomUser, id=reviewer_id)
 
-        # Create a new entry for the reviewer to review the document
         UploadedDocument.objects.create(
             user=reviewer,
             document=document.document,
@@ -682,7 +684,7 @@ def signup_user(request):
     else:
         form = ReviewerSignupForm(initial={'is_reviewer': False})
 
-    form.fields['is_reviewer'].disabled = True
+
 
     return render(request, 'auth_templates/signup_user.html', {'form': form})
 
@@ -759,5 +761,3 @@ def get_country_from_ip(request):
         return country
     except Exception as e:
         return None
-    
-

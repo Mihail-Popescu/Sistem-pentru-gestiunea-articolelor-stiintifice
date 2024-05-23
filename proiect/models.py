@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from proiect.settings import AUTH_USER_MODEL
 
-class CustomUser(AbstractUser): # diferentiem rolurile prin acestea:
+class CustomUser(AbstractUser): # diferentiem rolurile prin:
     is_reviewer = models.BooleanField(default=False) #
     is_tracker = models.BooleanField(default=False) #
     is_organizer = models.BooleanField(default=False) #

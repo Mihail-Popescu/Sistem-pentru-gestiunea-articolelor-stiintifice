@@ -6,43 +6,42 @@
 
 <head>
     <link rel="icon" href="{% static 'images/2232688.png' %}" type="image/png">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main_css/base.css' %}">
 </head>
 
 <body>
     <header class="header">
         <div class="container">
             <div class="header-left">
-                <a href="/" style="text-decoration: none; color: inherit;"> <img src="{% static 'images\2232688.png' %}"
-                        alt="Logo" style="height:50px;"> </a>
                 <a href="/" style="text-decoration: none; color: inherit;">
-                    <h1 class="header-content" href="/">ReviewHub</h1>
+                    <img src="{% static 'images/2232688.png' %}" alt="Logo" style="height:50px;">
+                </a>
+                <a href="/" style="text-decoration: none; color: inherit;">
+                    <h1 class="header-content">ReviewHub</h1>
                 </a>
             </div>
             <div class="header-right">
-                <a href="{% url 'conferences' %}" class="login-button">Conferences</a>
+                <a href="{% url 'conferences' %}" class="nav-button">Conferences</a>
                 {% if user.is_authenticated %}
                 {% if user.is_tracker %}
-                <a href="{% url 'tracker_dash' %}" class="login-button">Tracker Dashboard</a>
+                <a href="{% url 'tracker_dash' %}" class="nav-button">Tracker Dashboard</a>
                 {% endif %}
                 {% if user.is_organizer %}
-                <a href="{% url 'organizer_dash' %}" class="login-button">Organizer Dashboard</a>
+                <a href="{% url 'organizer_dash' %}" class="nav-button">Organizer Dashboard</a>
                 {% endif %}
                 {% if user.is_reviewer %}
-                <a href="{% url 'reviewer_dash' %}" class="login-button">Reviewer Dashboard</a>
+                <a href="{% url 'reviewer_dash' %}" class="nav-button">Reviewer Dashboard</a>
                 {% elif user.is_superuser %}
-                <a href="{% url 'admin_dash' %}" class="login-button">Admin Dashboard</a>
+                <a href="{% url 'admin_dash' %}" class="nav-button">Admin Dashboard</a>
                 {% else %}
-                <a href="{% url 'user_dash' %}" class="login-button">User Dashboard</a>
+                <a href="{% url 'user_dash' %}" class="nav-button">User Dashboard</a>
                 {% endif %}
-                {% endif %}
-                {% if user.is_authenticated %}
-                <span>Welcome, {{ user.username }}</span>
-                <a href="#" id="logoutBtn" class="login-button">Logout</a>
+                <span class="welcome-message">Welcome, {{ user.username }}</span>
+                <a href="#" id="logoutBtn" class="nav-button">Logout</a>
                 {% else %}
-                <a href="/login" class="login-button">Login</a>
+                <a href="/login" class="nav-button">Login</a>
                 {% endif %}
-                <a href="/help" class="login-button">Help</a>
+                <a href="/help" class="nav-button">Help</a>
             </div>
         </div>
     </header>

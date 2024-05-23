@@ -5,7 +5,7 @@
 {% load custom_tags %}
 <head>
     <title>User dash</title>
-    <link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard_css/user_dashboard.css' %}">
 </head>
 
 <div class="dashboard-container">
@@ -14,7 +14,7 @@
         <form method="post" enctype="multipart/form-data" class="form">
             {% csrf_token %}
             {{ form }}
-            <button type="submit" class="formbutton">Upload Document</button>
+            <button type="submit" class="formbutton blue-btn">Upload Document</button>
         </form> 
     </div>
     <div class="document-section">
@@ -28,37 +28,32 @@
                 <p>Document was rejected from {{ document.rejected_conference }} conference because no matching reviewers were found.</p>
                 {% endif %}
                 {% if document.feedback %}
-                <button class="document-btn document-preview-btn view-feedback-btn" data-document-id="{{ document.id }}">View Feedback</button>
+                <button class="document-btn green-btn view-feedback-btn" data-document-id="{{ document.id }}">View Feedback</button>
                 {% endif %}
-                <button class="document-btn document-preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
-                <form method="post" action="{% url 'remove_document' document.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="document-btn">Remove</button>
-                </form>
                 <form method="post" action="{% url 'spell_check' %}">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
-                    <button type="submit" class="document-btn">Spell Check</button>
+                    <button type="submit" class="document-btn yellow-btn">Spell Check</button>
                 </form>
                 <form method="post" action="{% url 'ner_extraction' %}">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
-                    <button type="submit" class="document-btn">Named Entity Recognition</button>
+                    <button type="submit" class="document-btn yellow-btn">Keywords Helper</button>
                 </form>
-                <form method="post" action="{% url 'analyze_sentiment' %}">
+                <form method="post" action="{% url 'analyze_sentiment' %}" class="sentiment-form">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
-                    <button type="submit" class="document-btn">Sentiment Analysis</button>
+                    <button type="submit" class="document-btn yellow-btn">Sentiment Check</button>
                 </form>
-                <form method="post" action="{% url 'compare_documents' %}">
+                <form method="post" class="compare-documents-form" data-action="{% url 'compare_documents' %}">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
-                    <button type="submit" class="document-btn">Compare Documents</button>
+                    <button type="submit" class="document-btn yellow-btn">Compare Documents</button>
                 </form>
                 {% if document.status == 'UPLOADED' %}
                 <form method="post" id="send-to-review-form-{{ document.id }}" action="{% url 'send_to_review' document.id %}">
                     {% csrf_token %}
-                    <button type="button" id="initial-send-button-{{ document.id }}" class="document-btn initial-send-button" data-doc-id="{{ document.id }}">Send to Review</button>
+                    <button type="button" id="initial-send-button-{{ document.id }}" class="document-btn green-btn initial-send-button" data-doc-id="{{ document.id }}">Send to Review</button>
                     <div id="review-details-{{ document.id }}" style="display: none;">
                         <label for="conference-{{ document.id }}">Select Conference:</label>
                         <select id="conference-{{ document.id }}" name="conference_name">
@@ -70,11 +65,18 @@
                         <input type="text" id="keywords-{{ document.id }}" name="keywords" value="{{ document.keywords }}"><br>
                         <label for="topic-{{ document.id }}">Topic:</label>
                         <input type="text" id="topic-{{ document.id }}" name="topic" value="{{ document.topic }}"><br>
-                        <button type="submit" class="document-btn">Submit</button>
-                        <button type="button" id="back-button-{{ document.id }}" class="document-btn back-button" data-doc-id="{{ document.id }}">Back</button>
+                        <button type="submit" class="document-btn green-btn">Submit</button>
+                        <button type="button" id="back-button-{{ document.id }}" class="document-btn blue-btn back-button" data-doc-id="{{ document.id }}">Back</button>
                     </div>
                 </form>
                 {% endif %}
+                <form method="post" action="{% url 'remove_document' document.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="document-btn red-btn">Remove</button>
+                </form>
+                <button class="document-btn blue-btn document-preview-btn" data-document-id="{{ document.id }}" data-document-url="{{ document.document.url }}">Preview</button>
+                <div class="comparison-results" id="comparison-results-{{ document.id }}" style="display: none;"></div>
+                <div class="sentiment-result" id="sentiment-result-{{ document.id }}"></div>
                 <div class="feedback-section" id="feedback-section-{{ document.id }}" style="display: none;"></div>
                 <div class="document-preview" style="display: none;"></div>
             </li>
@@ -82,6 +84,39 @@
         </ul>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.sentiment-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const documentId = this.querySelector('input[name="document_id"]').value;
+                const sentimentResult = document.getElementById('sentiment-result-' + documentId);
+
+                if (sentimentResult.style.display === 'block') {
+                    sentimentResult.style.display = 'none';
+                    sentimentResult.innerHTML = '';
+                    return;
+                }
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: new FormData(this),
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    sentimentResult.innerHTML = `<strong>Suggested sentiment identified by the "BERT" NLP model:</strong> ${data.sentiment}`;
+                    sentimentResult.style.display = 'block';
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
+
 
 <script>
         document.querySelectorAll('.view-feedback-btn').forEach(btn => {
@@ -104,32 +139,32 @@
     });
 
     document.querySelectorAll('.document-preview-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const documentId = this.getAttribute('data-document-id');
-            const documentUrl = this.getAttribute('data-document-url');
-            const previewDiv = this.parentElement.querySelector('.document-preview');
-            
-            if (previewDiv.style.display === 'none' || previewDiv.style.display === '') {
-                if (documentUrl.endsWith('.pdf')) {
-                    previewDiv.innerHTML = `<iframe src="${documentUrl}" width="100%" height="1000px" frameborder="0"></iframe>`;
-                    previewDiv.style.display = 'block';
-                } else if (documentUrl.endsWith('.docx')) {
-                    fetch(`/preview_document/${documentId}/`)
-                         .then(response => response.text())
-                         .then(data => {
-                                    previewDiv.innerHTML = `<div class="document-text">${data}</div>`;
-                                    previewDiv.style.display = 'block';
-                                        })
-    .catch(error => console.error('Error fetching document:', error));
-                } else {
-                    previewDiv.innerHTML = 'Unsupported file format';
-                    previewDiv.style.display = 'block';
-                }
+    btn.addEventListener('click', function() {
+        const documentId = this.getAttribute('data-document-id');
+        const documentUrl = this.getAttribute('data-document-url');
+        const previewDiv = this.parentElement.querySelector('.document-preview');
+        
+        if (previewDiv.style.display === 'none' || previewDiv.style.display === '') {
+            if (documentUrl.endsWith('.pdf')) {
+                previewDiv.innerHTML = `<iframe src="${documentUrl}" width="100%" height="1000px" frameborder="0"></iframe>`;
+                previewDiv.style.display = 'block';
+            } else if (documentUrl.endsWith('.docx')) {
+                fetch(`/preview_document/${documentId}/`)
+                     .then(response => response.text())
+                     .then(data => {
+                                previewDiv.innerHTML = `<div class="document-text docx-text">${data}</div>`;
+                                previewDiv.style.display = 'block';
+                            })
+                     .catch(error => console.error('Error fetching document:', error));
             } else {
-                previewDiv.style.display = 'none';
+                previewDiv.innerHTML = 'Unsupported file format';
+                previewDiv.style.display = 'block';
             }
-        });
+        } else {
+            previewDiv.style.display = 'none';
+        }
     });
+});
 
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.initial-send-button').forEach(function(button) {
@@ -148,6 +183,39 @@
             });
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.compare-documents-form').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const documentId = this.querySelector('input[name="document_id"]').value;
+            const comparisonResultsDiv = document.getElementById('comparison-results-' + documentId);
+
+            if (comparisonResultsDiv.style.display === 'block') {
+                comparisonResultsDiv.style.display = 'none';
+                comparisonResultsDiv.innerHTML = '';
+                return;
+            }
+
+            const formData = new FormData(this);
+
+            fetch(this.getAttribute('data-action'), {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                comparisonResultsDiv.innerHTML = data;
+                comparisonResultsDiv.style.display = 'block';
+            })
+            .catch(error => console.error('Error comparing documents:', error));
+        });
+    });
+});
+
 </script>
 
 {% endblock %}

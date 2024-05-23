@@ -1,0 +1,32 @@
+.spell-check-results-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 20vh;
+    background-color: #f0f8ff;
+}
+
+.spell-check-results {
+    background-color: white;
+    padding: 20px;
+    border: 1px solid black;
+    border-radius: 5px;
+    max-width: 800px;
+}
+
+.spell-check-results p {
+    text-align: left;
+    margin: 0;
+}
+
+.mistake {
+    background-color: yellow;
+}
+
+.back-button {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    text-decoration: none;
+    color: #0077cc;
+}
