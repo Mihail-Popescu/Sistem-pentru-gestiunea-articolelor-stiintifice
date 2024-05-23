@@ -3,6 +3,12 @@ body {
     color: #333; 
 }
 
+h2 {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    color: #4682b4;
+}
+
 .dashboard-container{
     display: grid;
     grid-template-columns: 3fr 3fr;
@@ -19,8 +25,10 @@ body {
     border-radius: 8px;
     width: 80%;
     max-width: 1500px;
-    text-align: center;                
+    text-align: center;  
+    margin-top: -50px;              
 }
+
 
 .document-section h3 {
     margin-top: 0;                   
@@ -32,7 +40,7 @@ ul.document-list {
     padding: 0;
     width: 100%; 
 }
-
+.conference-card,
 ul.document-list li {
     width: 90%;
     margin: 10px auto;

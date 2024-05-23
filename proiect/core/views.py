@@ -123,6 +123,9 @@ def send_to_review(request, document_id):
         conference = get_object_or_404(Conference, name=conference_name)
         trackers = conference.trackers.filter(is_tracker=True)
 
+        document.conference = conference
+        document.save()
+        
         for tracker in trackers:
             UploadedDocument.objects.create(
                 user=tracker,
@@ -357,13 +360,12 @@ def reviewer_dash(request):
     reviewer = request.user
     submitted_documents = UploadedDocument.objects.filter(user=reviewer, status='SUBMITTED')
     reviewing_documents = UploadedDocument.objects.filter(user=reviewer, status='UNDER_REVIEW')
-
+    
     search_query = request.GET.get('search_query')
     search_keyword = request.GET.get('search_keyword')
     search_topic = request.GET.get('search_topic')
 
     if search_query:
-
         query_filter = Q()
 
         if search_keyword and search_topic:
@@ -385,7 +387,17 @@ def reviewer_dash(request):
         search_query = None
         no_document_message = None
 
-    return render(request, "dashboard_templates/reviewer_dashboard.html", {'submitted_documents': submitted_documents, 'reviewing_documents': reviewing_documents, 'search_query': search_query, 'no_document_message': no_document_message})
+    joined_conferences = reviewer.joined_conferences.all()
+
+    return render(request, "dashboard_templates/reviewer_dashboard.html", {
+        'submitted_documents': submitted_documents,
+        'reviewing_documents': reviewing_documents,
+        'search_query': search_query,
+        'no_document_message': no_document_message,
+        'reviewer': reviewer,
+        'joined_conferences': joined_conferences
+    })
+
 
 @login_required
 def choose_document(request, document_id):
@@ -597,7 +609,7 @@ def delete_conference(request, conference_id):
 @login_required
 def admin_dash(request):
     signup_requests = ReviewerRequest.objects.all()
-    ongoing_reviews = UploadedDocument.objects.filter(status='UNDER_REVIEW', reviewer=None)
+    ongoing_reviews = UploadedDocument.objects.filter(status='UNDER_REVIEW', reviewer=None).select_related('conference', 'user')
     ongoing_reviewers_dict = {}
 
     search_query = request.GET.get('search_query')
@@ -605,6 +617,8 @@ def admin_dash(request):
         ongoing_reviews = ongoing_reviews.filter(document__icontains=search_query)
     
     for document in ongoing_reviews:
+        print(document)  # Debug output
+        print(document.conference)  # Debug output to check conference
         ongoing_reviewers = UploadedDocument.objects.filter(
             document__icontains=document.document.name,
             reviewer__isnull=False,
@@ -625,6 +639,7 @@ def admin_dash(request):
         'user_search_query': user_search_query,
         'users': users,
     })
+
 
 @login_required
 def change_user_roles(request):

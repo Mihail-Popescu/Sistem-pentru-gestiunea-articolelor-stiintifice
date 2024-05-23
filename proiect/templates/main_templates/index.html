@@ -27,11 +27,11 @@
         <div class="slider-wrapper">
             <div class="slider">
                 <div class="slides">
-                    <div class="slide"><video src="{% static 'videos/reclama-animoto.mp4' %}" alt="Slide 1" autoplay muted loop></video></div>
-                    <div class="slide"><video src="{% static 'videos/book.mp4' %}" alt="Slide 2" autoplay muted loop></video></div>
+                    <div class="slide"><video src="{% static 'videos/book.mp4' %}" alt="Slide 1" autoplay muted loop></video></div>
+                    <div class="slide"><img src="{% static 'images/image1.jpg' %}" alt="Slide 2"></div>
                     <div class="slide"><img src="{% static 'images/image2.jpg' %}" alt="Slide 3"></div>
-                    <div class="slide"><img src="{% static 'images/image4.jpg' %}" alt="Slide 4" class="blur"></div>
-                    <div class="slide"><img src="{% static 'images/image5.jpg' %}" alt="Slide 5" class="blur"></div>
+                    <div class="slide"><img src="{% static 'images/image3.jpg' %}" alt="Slide 4"></div>
+                    <div class="slide"><img src="{% static 'images/image4.jpg' %}" alt="Slide 5"></div>
                 </div>
                 <div class="dots-container">
                     <span class="dot" onclick="currentSlide(1)"></span>
@@ -43,6 +43,8 @@
             </div>
         </div>
 
+        
+
         <div class="geolocation-section">
             There are currently {{ country_reviewer_count }} reviewers in <span class="flag-icon flag-icon-{{ country|lower }}"></span> {{ country }} available for you.
         </div>
@@ -52,17 +54,17 @@
         <h2>Why Choose ReviewHub?</h2>
         <div class="features">
             <div class="feature">
-                <img src="{% static 'images/image2.jpg' %}" alt="Feature 1">
+                <img src="{% static 'images/icon1.png' %}" alt="Feature 1">
                 <h3>Quality Reviews</h3>
                 <p>Access to high-quality reviews from experienced professionals.</p>
             </div>
             <div class="feature">
-                <img src="{% static 'images/image2.jpg' %}" alt="Feature 2">
+                <img src="{% static 'images/icon2.png' %}" alt="Feature 2">
                 <h3>Global Reach</h3>
                 <p>Connect with reviewers from around the world.</p>
             </div>
             <div class="feature">
-                <img src="{% static 'images/image2.jpg' %}" alt="Feature 3">
+                <img src="{% static 'images/icon3.png' %}" alt="Feature 3">
                 <h3>Easy to Use</h3>
                 <p>Simple and intuitive platform for seamless collaboration.</p>
             </div>
@@ -72,7 +74,7 @@
 
 <script>
     let slideIndex = 1;
-    let slideInterval = setInterval(startSlideInterval, 20000);
+    let slideInterval = setInterval(startSlideInterval, 10000);
 
     showSlides(slideIndex);
 
@@ -84,7 +86,7 @@
 
     function resetInterval() {
         clearInterval(slideInterval);
-        slideInterval = setInterval(startSlideInterval, 20000);
+        slideInterval = setInterval(startSlideInterval, 10000);
     }
 
     function startSlideInterval() {

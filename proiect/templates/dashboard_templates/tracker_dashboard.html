@@ -1,6 +1,7 @@
 {% extends 'main_templates/base.html' %}
 {% load static %}
 {% block content %}
+{% load custom_tags %}
 <head>
   <title>Tracker Dashboard</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/dashboard_css/tracker_dashboard.css' %}">
@@ -8,25 +9,25 @@
 
 <div class="dashboard-container">
   <div class="left-column">
-    <h2>Conferences Where You Are the Tracker</h2>
+    <h2>Conferences where you are the tracker</h2>
     <ul>
       {% for conference in tracked_conferences %}
       <li class="conference-card">
-        Currently, you are the tracker of {{ conference.name }} conference.
+        Currently, you are the tracker of <b>{{ conference.name }}</b> conference.
       </li>
       {% empty %}
       <li class="conference-card">You are not the tracker of any conference.</li>
       {% endfor %}
     </ul>
 
-    <h2>Ongoing Reviews in Tracked Conferences</h2>
+    <h2>Ongoing reviews in tracked conferences</h2>
     <ul>
       {% for document_name, reviews in grouped_ongoing_reviews.items %}
       <li class="review-card">
-        <h3>Document Name: {{ document_name }}</h3>
+        <h3>Document Name: {{ document_name|basename }}</h3>
         <ul>
           {% for review in reviews %}
-          <li>Reviewer: {{ review.reviewer.username }} - {{ review.reviewer.email }}</li>
+          <b>Reviewer:</b> {{ review.reviewer.username }} - <b>Email:</b>{{ review.reviewer.email }}
           {% endfor %}
         </ul>
       </li>
@@ -35,17 +36,17 @@
       {% endfor %}
     </ul>
 
-    <h2>Reviewers Assigned to Conferences You Are Tracking</h2>
+    <h2>Reviewers assigned to conferences you are tracking</h2>
     <ul>
       {% for reviewer in reviewers %}
       <li class="reviewer-card">
         <strong>Username:</strong> {{ reviewer.username }}<br>
         <strong>Current Workplace:</strong> {{ reviewer.current_workplace }}<br>
-        <strong>References:</strong> {{ reviewer.references }}<br>
+        <strong>References:<br></strong> {{ reviewer.references }}<br>
         <strong>Joined Conferences as reviewer:</strong>
         <ul>
           {% for conference in reviewer.joined_conferences.all %}
-          <li>{{ conference.name }}</li>
+          - {{ conference.name }}<br>
           {% endfor %}
         </ul>
       </li>
@@ -56,7 +57,7 @@
   </div>
 
   <div class="right-column">
-    <h2>Documents Assigned to You</h2>
+    <h2>Documents assigned to you</h2>
     <ul>
       {% for document in documents %}
       {% if document.status == 'SUBMITTED' %}

@@ -5,10 +5,12 @@ body {
     background-color: #f0f8ff;
 }
 
+
 .hero-section {
     color: #000000;
     text-align: center;
     padding: 100px 20px;
+    position: relative;
 }
 
 .hero-text {
@@ -143,3 +145,4 @@ body {
     width: 800px;
     border-radius: 15px;
 }
+

@@ -21,7 +21,7 @@ body {
     flex-direction: column;
   }
   
-  h1, h2 {
+  h2 {
     color: #4682b4;
     text-align: center;
   }

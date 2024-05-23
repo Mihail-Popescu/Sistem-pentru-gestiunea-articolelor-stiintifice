@@ -78,15 +78,15 @@
     <ul>
       {% for document, ongoing_reviewers in ongoing_reviewers_dict.items %}
       <li class="review-card">
-        <strong>Document:</strong> {{ document.document.name|basename }} <br>
-        <strong>User:</strong> {{ document.user.username }} - {{ document.user.email }}<br>
-        {% for reviewer_username, reviewer_email in ongoing_reviewers %}
-        <strong>Reviewer:</strong> {{ reviewer_username }} - {{ reviewer_email }}<br>
-        {% endfor %}
-        <strong>Conference:</strong> {{ document.conference }} - {{ document.user.email }}<br>
+          <strong>Document:</strong> {{ document.document.name|basename }} <br>
+          <strong>Conference:</strong> {{ document.conference.name }} <br>
+          <strong>User:</strong> {{ document.user.username }} - {{ document.user.email }}<br>
+          {% for reviewer_username, reviewer_email in ongoing_reviewers %}
+          <strong>Reviewer:</strong> {{ reviewer_username }} - {{ reviewer_email }}<br>
+          {% endfor %}
       </li>
       {% endfor %}
-    </ul>
+  </ul>
   </div>
 </div>
 

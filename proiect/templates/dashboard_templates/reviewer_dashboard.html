@@ -9,7 +9,17 @@
 
 <div class="dashboard-container">
     <div class="document-section">
-        <h3>Documents submitted for review</h3>
+        <h2>Conferences where you are the reviewer</h2>
+        <ul>
+          {% for conference in joined_conferences %}
+          <li class="conference-card">
+            Currently, you are the reviewer of <b>{{ conference.name }}</b> conference.
+          </li>
+          {% empty %}
+          <li class="conference-card">You are not the reviewer of any conference.</li>
+          {% endfor %}
+        </ul>
+        <h2>Documents submitted for review</h2>
         <form method="get" action="{% url 'reviewer_dash' %}" class="search-form">
             <div class="search-bar">
                 <input type="text" name="search_query" placeholder="Search...">
@@ -55,7 +65,7 @@
     </div>
 
     <div class="document-section">
-        <h3>Currently reviewing documents</h3>
+        <h2>Currently reviewing documents</h2>
         <ul class="document-list">
             {% for document in reviewing_documents %}
             <li>

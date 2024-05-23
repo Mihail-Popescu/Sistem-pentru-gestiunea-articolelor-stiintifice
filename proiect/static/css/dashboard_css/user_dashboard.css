@@ -61,9 +61,6 @@ form label {
     font-weight: bold;
 }
 
-input[type="file"]::file-selector-button {
-    display: none; 
-}
 
 form input,
 form select {
