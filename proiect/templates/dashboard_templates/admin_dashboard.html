@@ -58,6 +58,7 @@
             Organizer:
             <input type="checkbox" name="is_organizer_{{ user.id }}" {% if user.is_organizer %}checked{% endif %}>
           </label>
+          <input type="hidden" name="user_id" value="{{ user.id }}">
         </li>
         {% endfor %}
       </ul>

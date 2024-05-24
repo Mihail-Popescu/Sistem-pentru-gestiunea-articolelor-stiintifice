@@ -19,6 +19,7 @@ from wordcloud import WordCloud
 from datetime import date
 from django.contrib import messages
 
+import matplotlib.pyplot as plt
 import fitz
 import enchant
 import io
@@ -30,32 +31,54 @@ import requests
 nlp = spacy.load("en_core_web_sm")
 
 
-
 def index(request):
-
-    country = get_country_from_ip(request)
+    country_name, country_code = get_country_from_ip(request)
     
-    if country:
-        country_reviewer_count = get_user_model().objects.filter(is_reviewer=True # , country=country
-                                                                 ).count()
+    if country_name:
+        # Extract all conferences and filter by the detected country
+        all_conferences = Conference.objects.all()
+        conferences_in_country = 0
+        for conference in all_conferences:
+            conference_country = get_country_from_location(conference.location)
+            if conference_country and conference_country == country_name:
+                conferences_in_country += 1
     else:
-        country = "Your Location"
-        country_reviewer_count = 0
+        country_name = "Your Location"
+        country_code = ""
+        conferences_in_country = 0
     
-    reviewer_count = get_user_model().objects.filter(is_reviewer=True).count()
+    total_conferences = Conference.objects.all().count()
 
     context = {
         "title": "Home",
-        'country': country,
-        'country_reviewer_count': country_reviewer_count,
-        'reviewer_count': reviewer_count,
+        'country': country_name,
+        'country_flag': country_code,
+        'conferences_in_country': conferences_in_country,
+        'total_conferences': total_conferences,
     }
     return render(request, "main_templates/index.html", context)
 
-nlp = spacy.load("en_core_web_md")
+def get_country_from_ip(request):
+    try:
+        response = requests.get('https://ipinfo.io/json')
+        data = response.json()
+        country_code = data['country']
+        country_name = COUNTRY_CODES.get(country_code, None)
+        return country_name, country_code
+    except Exception as e:
+        return None, None
+    
+def get_country_from_location(location):
+    parts = location.split(',')
+    if parts:
+        return parts[0].strip()
+    return None
 
-
-
+COUNTRY_CODES = {
+    'RO': 'Romania',
+    'US': 'United States',
+    'PL': 'Poland',
+}
 
 #user
 @login_required
@@ -246,25 +269,26 @@ def ner_view(request):
             return render(request, 'error.html', {'message': 'Document not found'})
 
 def ner_extraction(text):
-    """Extract named entities from text."""
-
     doc = nlp(text)
     
     entities = [(ent.text, ent.label_) for ent in doc.ents]
     return entities
 
 def generate_word_cloud(entities):
-    entity_freq = {}
-    for entity, _ in entities:
-        entity_freq[entity] = entity_freq.get(entity, 0) + 1
+    text = ' '.join([entity[0] for entity in entities])
     
-    wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(entity_freq)
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
     
-    img_buffer = io.BytesIO()
-    wordcloud.to_image().save(img_buffer, format='PNG')
-    img_buffer.seek(0)
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
     
-    img_str = base64.b64encode(img_buffer.read()).decode('utf-8')
+    img_str = base64.b64encode(buffer.read()).decode()
+    buffer.close()
     
     return img_str
 
@@ -617,8 +641,6 @@ def admin_dash(request):
         ongoing_reviews = ongoing_reviews.filter(document__icontains=search_query)
     
     for document in ongoing_reviews:
-        print(document)  # Debug output
-        print(document.conference)  # Debug output to check conference
         ongoing_reviewers = UploadedDocument.objects.filter(
             document__icontains=document.document.name,
             reviewer__isnull=False,
@@ -645,10 +667,16 @@ def admin_dash(request):
 def change_user_roles(request):
     if request.method == 'POST':
         for user in get_user_model().objects.all():
-            user.is_reviewer = request.POST.get(f'is_reviewer_{user.id}') == 'on'
-            user.is_tracker = request.POST.get(f'is_tracker_{user.id}') == 'on'
-            user.is_organizer = request.POST.get(f'is_organizer_{user.id}') == 'on'
-            user.save()
+            user_id = request.POST.get('user_id')
+            is_reviewer = request.POST.get(f'is_reviewer_{user_id}') == 'on'
+            is_tracker = request.POST.get(f'is_tracker_{user_id}') == 'on'
+            is_organizer = request.POST.get(f'is_organizer_{user_id}') == 'on'
+
+            if (user.id == int(user_id)) and ((user.is_reviewer != is_reviewer) or (user.is_tracker != is_tracker) or (user.is_organizer != is_organizer)):
+                user.is_reviewer = is_reviewer
+                user.is_tracker = is_tracker
+                user.is_organizer = is_organizer
+                user.save()
     return redirect('admin_dash')
 
 
@@ -764,15 +792,3 @@ def conferences(request):
     ongoing_conferences = Conference.objects.filter(start_date__lte=today, end_date__gte=today)
     planned_conferences = Conference.objects.filter(start_date__gt=today)
     return render(request, 'main_templates/conferences.html', {'ongoing_conferences': ongoing_conferences, 'planned_conferences': planned_conferences})
-
-# ip geo
-
-def get_country_from_ip(request):
-    
-    try:
-        response = requests.get('https://ipinfo.io/json')
-        data = response.json()
-        country = data['country']
-        return country
-    except Exception as e:
-        return None

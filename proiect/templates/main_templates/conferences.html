@@ -30,7 +30,7 @@
   {% for conference in planned_conferences %}
   <li>
     {% if conference.picture %}
-    <img src="{{ conference.picture.url }}" alt="{{ conference.name }}" width="200"><br>
+    <img src="{{ conference.picture.url }}" alt="{{ conference.name }}" width="50"><br>
     {% endif %}
     <strong>{{ conference.name }}</strong><br>
     <b>Organizer:</b> {{ conference.organizer }} <br>

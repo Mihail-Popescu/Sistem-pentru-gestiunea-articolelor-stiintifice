@@ -33,7 +33,7 @@
                 <form method="post" action="{% url 'spell_check' %}">
                     {% csrf_token %}
                     <input type="hidden" name="document_id" value="{{ document.id }}">
-                    <button type="submit" class="document-btn yellow-btn">Spell Check</button>
+                    <button type="submit" class="document-btn yellow-btn">Spelling Check</button>
                 </form>
                 <form method="post" action="{% url 'ner_extraction' %}">
                     {% csrf_token %}
