@@ -35,7 +35,6 @@ def index(request):
     country_name, country_code = get_country_from_ip(request)
     
     if country_name:
-        # Extract all conferences and filter by the detected country
         all_conferences = Conference.objects.all()
         conferences_in_country = 0
         for conference in all_conferences:

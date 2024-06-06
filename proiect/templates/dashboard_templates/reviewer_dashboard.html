@@ -72,7 +72,7 @@
               <h3><center>{{ document.document.name|basename }}</center></h3>
               <p><strong>Topic:</strong> {{ document.topic }} <br> <strong>Keywords:</strong> {{ document.keywords }}</p>
                 <div class="document-actions">
-                    <button class="document-btn return-btn" data-document-id="{{ document.id }}">Return Feedback</button>
+                    <button class="document-btn return-btn" data-document-id="{{ document.id }}">Return document</button>
                     <form method="get" action="{{ document.document.url }}" style="display: inline;">
                       {% csrf_token %}
                       <button type="submit" class="document-btn" download>Download</button>
