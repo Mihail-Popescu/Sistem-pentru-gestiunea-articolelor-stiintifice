@@ -18,6 +18,11 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from wordcloud import WordCloud
 from datetime import date
 from django.contrib import messages
+import string
+from gensim.parsing.preprocessing import remove_stopwords
+from nltk.stem import WordNetLemmatizer
+import nltk
+import numpy as np
 
 import matplotlib.pyplot as plt
 import fitz
@@ -27,6 +32,8 @@ import base64
 import torch
 import spacy
 import requests
+
+nltk.download('wordnet')
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -332,10 +339,9 @@ def compare_documents(selected_document_id):
         selected_document_text = get_document_text(selected_document)
 
         other_documents = UploadedDocument.objects.filter(~Q(id=selected_document_id), reviewer__isnull=True)
-
         other_document_texts = [get_document_text(doc) for doc in other_documents]
 
-        processed_texts = [preprocess_text(text) for text in [selected_document_text] + other_document_texts]
+        processed_texts = [preprocess_text(selected_document_text)] + [preprocess_text(text) for text in other_document_texts]
 
         dictionary = corpora.Dictionary(processed_texts)
         corpus = [dictionary.doc2bow(text) for text in processed_texts]
@@ -343,6 +349,8 @@ def compare_documents(selected_document_id):
         index = similarities.MatrixSimilarity(corpus)
 
         sims = index[corpus[0]]
+        
+        sims = np.delete(sims, 0)
 
         sorted_sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
@@ -352,7 +360,7 @@ def compare_documents(selected_document_id):
 
     except UploadedDocument.DoesNotExist:
         return None
-    
+
 def get_document_text(document):
     if document.document.path.endswith('.pdf'):
         return extract_text_from_pdf(document.document.path)
@@ -373,7 +381,11 @@ def compare_documents_view(request):
         return render(request, 'error.html', {'message': 'Invalid request method'})
 
 def preprocess_text(text):
-
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    text = remove_stopwords(text)
+    lemmatizer = WordNetLemmatizer()
+    text = ' '.join([lemmatizer.lemmatize(word) for word in text.split()])
     return text.split()
 
 
