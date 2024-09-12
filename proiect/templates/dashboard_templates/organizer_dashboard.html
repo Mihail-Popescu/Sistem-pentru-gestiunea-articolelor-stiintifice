@@ -84,7 +84,6 @@
         <b>Location:</b> {{ conference.location }}<br><br>
         <b>Start Date:</b> {{ conference.start_date }}<br>
         <b>End Date:</b> {{ conference.end_date }}<br><br>
-        <b>Trackers:</b> {{ conference.trackers }}<br>
         <b>Description:</b> {{ conference.description }}<br>
         
         <form method="post" action="{% url 'delete_conference' conference.id %}">
