@@ -26,29 +26,29 @@ pip install -r requirements.txt
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/1b9c39a9-8c0d-496f-85fb-ddc534af42af" alt="AppGif10">
-  <p>Example of user dashboard</p>
+  <p>Example of the user dashboard</p>
 </div>
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/808f84e2-fbf6-4189-b9e4-d71d81efc092" alt="Img1">
-  <p>Example of organizer dashboard</p>
+  <p>Example of the organizer dashboard</p>
 </div>
 
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/f90cd083-66d5-45e4-b68b-60239da7404e" alt="Img2">
-  <p>Example of tracker dashboard</p>
+  <p>Example of the tracker dashboard</p>
 </div>
 
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/59182e01-058d-4b49-8648-39ce2d868e39" alt="Img3">
-  <p>Example of reviewer dashboard</p>
+  <p>Example of the reviewer dashboard</p>
 </div>
 
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/d57e2c34-d2f3-4615-b64f-ff581e5975bd" alt="Img4">
-  <p>Example of admin dashboard</p>
+  <p>Example of the admin dashboard</p>
 </div>
 
