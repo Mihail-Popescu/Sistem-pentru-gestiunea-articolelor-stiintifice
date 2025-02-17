@@ -1,4 +1,4 @@
-## About  
+## Overview  
 
 This web-based system, developed as part of my graduation project, is designed for managing scientific articles, specifically to streamline and simplify the evaluation process for scientific conferences. The system, named **"ReviewHub"**, aims to improve the workflow for organizers, reviewers, and authors involved in scientific conferences.
 
